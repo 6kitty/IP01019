@@ -5,7 +5,7 @@ int main() {
 
     int arrtime[100];
     memset(arrtime, 0, sizeof(arrtime));
-
+    
     int exetime[100];
     memset(exetime, 0, sizeof(exetime));
 
