@@ -12,7 +12,7 @@ int main() {
     int pri[100];
     memset(pri, 0, sizeof(pri));
 
-    // 나 여기 인풋 만들겠음 
+    // 나 여기 인풋 만들겠음 아 진짜 힘들다 
     int i = 0;
     do {
         scanf("%s %d %d %d", thread[i], &arrtime[i], &exetime[i], &pri[i]);
