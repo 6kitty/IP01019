@@ -1,13 +1,13 @@
 #include <stdio.h> 
 #include <string.h>
-#include <limits.h> //int¶§¹®¿¡?
+#include <limits.h> //intë•Œë¬¸ì—?
 
-// ½Ã°£ Àü¿ª º¯¼ö 
+// ì‹œê°„ ì „ì—­ ë³€ìˆ˜ 
 float CT[8] = { 0, };
 float TAT[8] = { 0, };
 float WT[8] = { 0, };
 
-// ½º·¹µå °³¼ö Àü¿ª º¯¼ö·Î Á¤ÀÇ 
+// ìŠ¤ë ˆë“œ ê°œìˆ˜ ì „ì—­ ë³€ìˆ˜ë¡œ ì •ì˜ 
 int threadnum = 0;
 
 // FCFS
@@ -23,38 +23,38 @@ int FCFS(char* tmp[], int arrtime[], int exetime[]) {
 
     while (nn < n) {
         int idx = -1;
-        // ÆÄ¾÷ÇÕ´Ï´Ù
-        // »çÀ¯:  ¶Ë¸¶·Á¿ò
-        // ? ¤»¤»¤»¤»¤»¤»¤»¤»¤»¤»¤»¤»¤»¤»¤»¤»¤»¤»¤»¤»
+        // íŒŒì—…í•©ë‹ˆë‹¤
+        // ì‚¬ìœ :  ë˜¥ë§ˆë ¤ì›€
+        // ? ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹ã…‹
     }
 }
 
-// SJF ºñ¼±Á¡Çü
+// SJF ë¹„ì„ ì í˜•
 int SJF(char* thread[], int arrtime[], int exetime[], int n) {
-    int time = 0; // ÃÊ±âÈ­
+    int time = 0; // ì´ˆê¸°í™”
 
     return 0;
 }
 
-// SJF ¼±Á¡Çü
+// SJF ì„ ì í˜•
 int SJFpree() {
 
     return 0;
 }
 
-// LJF ºñ¼±Á¡Çü
+// LJF ë¹„ì„ ì í˜•
 int LJF() {
 
     return 0;
 }
 
-// LJF ¼±Á¡Çü
+// LJF ì„ ì í˜•
 int LJFpree() {
 
     return 0;
 }
 
-// Priority ºñ¼±Á¡Çü
+// Priority ë¹„ì„ ì í˜•
 int pri(char* thread[], int arrtime[], int exetime[], int pri[], int n) {
     int visited[100] = { 0 };
     int currentTime = 0;
@@ -74,14 +74,14 @@ int pri(char* thread[], int arrtime[], int exetime[], int pri[], int n) {
             }
         }
 
-        // ºñ¼±Á¡ÇüÀÌ´Ï±î ±×³É ¿À´Â´ë·Î ½Ã°£ °¡°Ô
+        // ë¹„ì„ ì í˜•ì´ë‹ˆê¹Œ ê·¸ëƒ¥ ì˜¤ëŠ”ëŒ€ë¡œ ì‹œê°„ ê°€ê²Œ
         if (idx == -1) {
             currentTime++;
             count--;
             continue;
         }
 
-        // ¼±ÅÃµÈ ½º·¹µå ½ÇÇà
+        // ì„ íƒëœ ìŠ¤ë ˆë“œ ì‹¤í–‰
         visited[idx] = 1;
         currentTime += exetime[idx];
         CT[idx] = currentTime;
@@ -94,7 +94,7 @@ int pri(char* thread[], int arrtime[], int exetime[], int pri[], int n) {
     return 0;
 }
 
-// Priority ¼±Á¡Çü
+// Priority ì„ ì í˜•
 int pripree(char* thread[], int arrtime[], int exetime[], int pri[], int n) {
     int remainingTime[100];
     int currentTime = 0;
@@ -109,7 +109,7 @@ int pripree(char* thread[], int arrtime[], int exetime[], int pri[], int n) {
         int idx = -1;
         int highestPriority = -1;
 
-        // µµÂøÇÑ °Í Áß¿¡¼­ ¿ì¼±¼øÀ§ ³ôÀº °Å...
+        // ë„ì°©í•œ ê²ƒ ì¤‘ì—ì„œ ìš°ì„ ìˆœìœ„ ë†’ì€ ê±°...
         for (int i = 0; i < n; i++) {
             if (arrtime[i] <= currentTime && remainingTime[i] > 0) {
                 if (pri[i] < highestPriority) {
@@ -119,13 +119,13 @@ int pripree(char* thread[], int arrtime[], int exetime[], int pri[], int n) {
             }
         }
 
-        // ½ÇÇàÇÒ ¼ö ÀÖ´Â °Å ¾ø´Â °æ¿ì ±×³É ½Ã°£ ÁøÇà
+        // ì‹¤í–‰í•  ìˆ˜ ìˆëŠ” ê±° ì—†ëŠ” ê²½ìš° ê·¸ëƒ¥ ì‹œê°„ ì§„í–‰
         if (idx == -1) {
             currentTime++;
             continue;
         }
 
-        // ¼±ÅÃÇÑ °Å ½ÇÇà
+        // ì„ íƒí•œ ê±° ì‹¤í–‰
         printf("%d: %s(1)\n", currentTime, thread[idx]);
         remainingTime[idx]--;
         currentTime++;
@@ -148,34 +148,31 @@ int RR() {
 }
 
 int main() {
-    // input: txt ÀÔ·Â¹Ş¾Æ¼­ Ã³¸® 
-    char* thread[100];
-    memset(thread, 0, sizeof(thread));
+    int i = -1;
+    char input[100];
+    while (1) {
+        // í•œ ì¤„ ì…ë ¥ë°›ê¸°
+        fgets(input, sizeof(input), stdin);
 
-    int arrtime[100];
-    memset(arrtime, 0, sizeof(arrtime));
-    
-    int exetime[100];
-    memset(exetime, 0, sizeof(exetime));
+        // ì¢…ë£Œ ì¡°ê±´ í™•ì¸
+        if (input[0] == 'E' && strlen(input) == 2) { // "E" + ê°œí–‰ë¬¸ì
+            break;
+        }
 
-    int pri[100];
-    memset(pri, 0, sizeof(pri));
+        // ì…ë ¥ëœ ë¬¸ìì—´ì„ êµ¬ì¡°ì²´ ë©¤ë²„ì— ì €ì¥
+        sscanf(input, "%s %d %d %d", th[i].tid, &th[i].arrtime, &th[i].exetime, &th[i].priority);
+        i++;
+    }
 
-    // ³ª ¿©±â ÀÎÇ² ¸¸µé°ÚÀ½ ¾Æ ÁøÂ¥ Èûµé´Ù 
-    int i = 0;
-    do {
-        scanf("%s %d %d %d", thread[i], &arrtime[i], &exetime[i], &pri[i]);
-    } while (strcmp(thread[i], "E") != 0);
+    threadnum = i - 1;
 
-    threadnum = i;
+    // ì•Œê³ ë¦¬ì¦˜ ì‹¤í–‰ 
+    FCFS();
 
-    // ¾Ë°í¸®Áò ½ÇÇà 
-    FCFS(thread, arrtime, exetime);
-
-    // Å¸ÀÓ Ãâ·Â 
-    // TODO: ÁÙ¸ÂÃãÇØ¾ßµÊ(\t¿´´øµí) 
+    // íƒ€ì„ ì¶œë ¥ 
+    // TODO: ì¤„ë§ì¶¤í•´ì•¼ë¨(\tì˜€ë˜ë“¯) 
     printf("Results Completed Time Turnaround Time Waiting Time\n----------------------------------\n");
     for (int j = 0; j < threadnum; j++) {
-        printf("%s %.2f %.2f %.2f\n", thread[j], CT[j], TAT[j], WT[j]);
+        printf("%s %.2f %.2f %.2f\n", th[j].tid, CT[j], TAT[j], WT[j]);
     }
 }
