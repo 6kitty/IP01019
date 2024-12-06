@@ -3,25 +3,27 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h> //int때문에?
-#define MAX 10
-
 
 // 시간 전역 변수 
 float CT[8] = { 0, };
 float TAT[8] = { 0, };
 float WT[8] = { 0, };
 
-struct thread {
-    char* tid;
-    int arrtime;
-    int exetime;
-    int priority;
-};
+#define MAX 100 // 최대 스레드 수
 
-struct thread th[MAX];
+// 스레드 정보를 담는 구조체
+typedef struct {
+    char tid[10];      // 스레드 ID
+    int arrtime;       // 도착 시간
+    int exetime;       // 실행 시간
+    int priority;      // 우선순위
+} Thread;
+
+Thread th[MAX];
 
 // FCFS
 int FCFS(int n) {
+    printf("FCFS\n");
     int nn = 0;
     int time = 0;
     if (n == 0) {
@@ -60,6 +62,8 @@ int FCFS(int n) {
         nn += 1;
     }
 
+    printf("#");
+
     WT[0] /= n;
     TAT[0] /= n;
     CT[0] /= n;
@@ -70,24 +74,62 @@ int FCFS(int n) {
 
 int main() {
     int i = 0;
-    char input[100];
+    char input[256];
     int threadnum = 0;
-    while (1) {
-        // 한 줄 입력받기
-        fgets(input, sizeof(input), stdin);
-        printf("Input: %s\n", input);
-
-        // 종료 조건 확인
-        if (input[0] == 'E' && strlen(input) == 2) { 
+    while (fgets(input, sizeof(input), stdin)) {
+        // 입력이 "E"이면 종료
+        if (strcmp(input, "E\n") == 0 || strcmp(input, "E") == 0) {
             break;
         }
 
-        // 입력된 문자열을 구조체 멤버에 저장
-        scanf(input, "%s %d %d %d", th[i].tid, &(th[i].arrtime), &(th[i].exetime), &(th[i].priority));
-        i++;
+        // 공백을 기준으로 문자열 분리
+        char* token = strtok(input, " ");
+        if (token != NULL) {
+            // 첫 번째 값: tid
+            strncpy(th[i].tid, token, sizeof(th[i].tid) - 1);
+            th[i].tid[sizeof(th[i].tid) - 1] = '\0'; // null-terminate
+
+            // 두 번째 값: arrtime
+            token = strtok(NULL, " ");
+            if (token != NULL) {
+                th[i].arrtime = atoi(token);
+            }
+            else {
+                printf("Error: No data\n");
+                continue;
+            }
+
+            // 세 번째 값: exetime
+            token = strtok(NULL, " ");
+            if (token != NULL) {
+                th[i].exetime = atoi(token);
+            }
+            else {
+                printf("Error: No data\n");
+                continue;
+            }
+
+            // 네 번째 값: priority
+            token = strtok(NULL, " ");
+            if (token != NULL) {
+                th[i].priority = atoi(token);
+            }
+            else {
+                printf("Error: No data\n");
+                continue;
+            }
+
+            i++; // 스레드 개수 증가
+
+            // 배열 초과 방지
+            if (i >= MAX) {
+                printf("WARNING: overflow\n");
+                break;
+            }
+        }
     }
 
-    threadnum = i+1;
+    threadnum = i;
 
     // 알고리즘 실행 
     FCFS(threadnum);
@@ -103,7 +145,7 @@ int main() {
     "priority (preemptive)",
     "RR"
     };
-    printf("\n\nResults\nAlgorithm\t\t\tCompleted Time\tTurnaround Time\tWaiting Time\n");
+    printf("\n\nResults\t\tCompleted Time\tTurnaround Time\tWaiting Time\n");
     printf("------------------------------------------------------------------------\n");
 
     for (int j = 0; j < 8; j++) {
