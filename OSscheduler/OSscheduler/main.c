@@ -531,11 +531,13 @@ int main() {
 
     // 알고리즘 실행 
     FCFS(threadnum);
-    //SJF(threadnum);
-    //SJFpree(threadnum);
+    SJF(threadnum);
+    SJFpree(threadnum);
+    LJF(threadnum);
+    LJFpree(threadnum);
     PriorityNonPreemptive(threadnum);
     PriorityPreemptive(threadnum);
-    //RR(threadnum, time_slice);
+    RR(threadnum, time_slice);
 
     // 타임 출력 
     const char* algo[] = {
