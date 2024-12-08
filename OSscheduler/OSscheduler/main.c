@@ -186,10 +186,10 @@ int SJFpree(int n) {
 
 //LJF (non preemptive)
 int LJF(int n) {
-	fprintf(output, "LJF (Non-Preemptive)\n");
+	printf("LJF (Non-Preemptive)\n");
 	int nn = 0;
 	int time = 0;
-	fprintf(output, "0 : ");
+	printf("0 : ");
 	while (nn < n) {
 		int idx = -1;
 		int max = -1;
@@ -205,10 +205,10 @@ int LJF(int n) {
 			continue;
 		}
 		if (th[idx].arrtime > time) {
-			fprintf(output, "- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
+			printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
 			time = th[idx].arrtime;
 		}
-		fprintf(output, "%s (%d)\n%d : ", th[idx].tid, th[idx].exetime, time + th[idx].exetime);
+		printf("%s (%d)\n%d : ", th[idx].tid, th[idx].exetime, time + th[idx].exetime);
 		WT[3] += time - th[idx].arrtime;
 		TAT[3] += time - th[idx].arrtime + th[idx].exetime;
 		CT[3] += time + th[idx].exetime;
@@ -216,7 +216,7 @@ int LJF(int n) {
 		th[idx].exetime = 0;
 		nn += 1;
 	}
-	fprintf(output, "#\n");
+	printf("#\n");
 	WT[3] /= n;
 	TAT[3] /= n;
 	CT[3] /= n;
@@ -225,9 +225,9 @@ int LJF(int n) {
 
 //LJF (preemptive)
 int LJFpree(int n) {
-	fprintf(output, "LJF (Non-Preemptive)\n");
+	printf("LJF (Non-Preemptive)\n");
 	int left[MAX];
-	fprintf("0 : ");
+	printf("0 : ");
 	for (int i = 0; i < n; i++) {
 		left[i] = th[i].exetime;
 	}
