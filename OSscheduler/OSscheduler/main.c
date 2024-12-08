@@ -21,12 +21,9 @@ typedef struct {
 
 Thread th[MAX];
 
-FILE* input = NULL;
-FILE* output = NULL;
-
 // FCFS
 int FCFS(int n) {
-    printf("FCFS\n");
+    printf("\nFCFS\n");
     int nn = 0;
     int time = 0;
     if (n == 0) {
@@ -35,33 +32,36 @@ int FCFS(int n) {
 
     printf("0 : ");
 
+    // 스레드 데이터를 복사하여 독립적인 실행을 보장
+    Thread th_copy[MAX];
+    memcpy(th_copy, th, sizeof(Thread) * n);
+
     while (nn < n) {
         int idx = -1;
 
-
+        // 각 스레드 정보 수정 없이 원본을 유지
         for (int i = 0; i < n; i++) {
-            if (th[i].exetime <= 0) { continue; }
+            if (th_copy[i].exetime <= 0) { continue; }
 
-            if (idx == -1 || th[i].arrtime < th[idx].arrtime) {
+            if (idx == -1 || th_copy[i].arrtime < th_copy[idx].arrtime) {
                 idx = i;
             }
         }
 
-        if (idx == -1)
-            break;
+        if (idx == -1) break;
 
-        if (th[idx].arrtime > time) {
-            printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
-            time += th[idx].arrtime;
+        if (th_copy[idx].arrtime > time) {
+            printf("- (%d)\n%d : ", th_copy[idx].arrtime, th_copy[idx].arrtime + time);
+            time += th_copy[idx].arrtime;
         }
-        printf("%s (%d)\n%d : ", th[idx].tid, th[idx].exetime, time + th[idx].exetime);
+        printf("%s (%d)\n%d : ", th_copy[idx].tid, th_copy[idx].exetime, time + th_copy[idx].exetime);
 
-        WT[0] += time - th[idx].arrtime;
-        TAT[0] += time - th[idx].arrtime + th[idx].exetime;
-        CT[0] += time + th[idx].exetime;
+        WT[0] += time - th_copy[idx].arrtime;
+        TAT[0] += time - th_copy[idx].arrtime + th_copy[idx].exetime;
+        CT[0] += time + th_copy[idx].exetime;
 
-        time += th[idx].exetime;
-        th[idx].exetime = 0;
+        time += th_copy[idx].exetime;
+        th_copy[idx].exetime = 0;  // 실행 후 복사본에서만 값 변경
         nn += 1;
     }
 
@@ -75,7 +75,7 @@ int FCFS(int n) {
 }
 
 // SJF (non-preemptive)
-int SJF(int n) {
+/*int SJF(int n) {
     printf("SJF (Non-Preemptive)\n");
     int nn = 0;
     int time = 0;
@@ -122,10 +122,11 @@ int SJF(int n) {
     CT[1] /= n;
 
     return 0;
-}
+}*/
+
 
 // SJF (preemptive)
-int SJFpree(int n) {
+/*int SJFpree(int n) {
     printf("SJF (Preemptive)\n");
     int left[MAX];
 
@@ -171,6 +172,7 @@ int SJFpree(int n) {
             CT[2] += time + 1;
             TAT[2] += CT[2] - th[idx].arrtime;
             WT[2] += TAT[2] - th[idx].exetime;
+
         }
         time++;
     }
@@ -180,97 +182,163 @@ int SJFpree(int n) {
     WT[2] /= n;
 
     return 0;
-}
+}*/
 
 // LJF (non-preemptive)
-int LJF(int n) {
-    fprintf(output, "LJF (Non-Preemptive)\n");
-    int nn = 0;
-    int time = 0;
-    fprintf(output, "0 : ");
-    while (nn < n) {
-        int idx = -1;
-        int max = -1;
-        for (int i = 0; i < n; i++) {
-            if (th[i].exetime <= 0) { continue; }
-            if (th[i].arrtime <= time && th[i].exetime > max) {
-                max = th[i].exetime;
-                idx = i;
-            }
-        }
-        if (idx == -1) {
-            time++;
-            continue;
-        }
-        if (th[idx].arrtime > time) {
-            fprintf(output, "- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
-            time = th[idx].arrtime;
-        }
-        fprintf(output, "%s (%d)\n%d : ", th[idx].tid, th[idx].exetime, time + th[idx].exetime);
-        WT[3] += time - th[idx].arrtime;
-        TAT[3] += time - th[idx].arrtime + th[idx].exetime;
-        CT[3] += time + th[idx].exetime;
-        time += th[idx].exetime;
-        th[idx].exetime = 0;
-        nn += 1;
-    }
-    fprintf(output, "#\n");
-    WT[3] /= n;
-    TAT[3] /= n;
-    CT[3] /= n;
-    return 0;
-}
+
 
 // LJF (preemptive)
-int LJFpree(int n) {
-    fprintf(output, "LJF (Non-Preemptive)\n");
-    int left[MAX];
-    fprintf(output, "0 : ");
-    for (int i = 0; i < n; i++) {
-        left[i] = th[i].exetime;
-    }
+
+
+// Priority (non-preemptive)
+int PriorityNonPreemptive(int n) {
+    printf("\nPriority (Non-preemptive)\n");
+    int nn = 0;
     int time = 0;
-    while (1) {
+    if (n == 0) {
+        return -1;
+    }
+
+    printf("0 : ");
+
+    Thread th_copy[MAX];
+    memcpy(th_copy, th, sizeof(Thread) * n);
+
+    while (nn < n) {
         int idx = -1;
-        int max = -1;
-        for (int j = 0; j < n; j++) {
-            if (left[j] > 0 && th[j].arrtime <= time && left[j] > max) {
-                max = left[j];
-                idx = j;
+
+        // 도착 시간이 같으면 우선순위로 비교
+        for (int i = 0; i < n; i++) {
+            if (th_copy[i].exetime > 0 && th_copy[i].arrtime <= time) {
+                // 우선순위가 더 높은 작업을 찾음
+                if (idx == -1 || th_copy[i].arrtime < th_copy[idx].arrtime || (th_copy[i].arrtime == th_copy[idx].arrtime && th_copy[i].priority < th_copy[idx].priority)) {
+                    idx = i;
+                }
             }
         }
+
         if (idx == -1) {
-            int done = 1;
-            for (int j = 0; j < n; j++) {
-                if (left[j] > 0) {
-                    done = 0;
+            // 선택할 작업이 없으면 시간 증가
+            int any_task_left = 0;
+            for (int i = 0; i < n; i++) {
+                if (th_copy[i].exetime > 0) {
+                    any_task_left = 1;
                     break;
                 }
             }
-            if (done) break;
+            if (any_task_left == 0) {
+                break; // 더 이상 할 일이 없으면 종료
+            }
+
+            time++;  // 시간 증가
+            continue; // 계속 루프
+        }
+
+        // 작업 실행
+        printf("%s (%d)\n%d : ", th_copy[idx].tid, th_copy[idx].exetime, time + th_copy[idx].exetime);
+
+        // 대기 시간, 반환 시간, 완료 시간 계산
+        WT[0] += time - th_copy[idx].arrtime;
+        TAT[0] += time - th_copy[idx].arrtime + th_copy[idx].exetime;
+        CT[0] += time + th_copy[idx].exetime;
+
+        time += th_copy[idx].exetime; // 현재 시간 갱신
+        th_copy[idx].exetime = 0; // 작업 완료
+        nn += 1;
+    }
+
+    printf("#\n");
+
+    // 평균 계산
+    WT[5] /= n;
+    TAT[5] /= n;
+    CT[5] /= n;
+
+    return 0;
+}
+
+
+// Priority (Preemptive)
+int PriorityPreemptive(int n) {
+    printf("\nPriority (Preemptive)\n");
+
+    int left[MAX];  // 남은 실행 시간
+    int time = 0;   // 현재 시간
+
+    // 각 스레드의 남은 실행 시간을 초기화
+    for (int i = 0; i < n; i++) {
+        left[i] = th[i].exetime;
+    }
+
+    printf("0 : ");
+
+    int idx = -1;  // 현재 실행 중인 스레드의 인덱스
+    int all_done = 0;  // 모든 스레드가 끝났는지 여부 확인
+
+    // while문을 돌면서 모든 스레드가 종료될 때까지 실행
+    while (1) {
+        int max_priority = -1;
+        int new_idx = -1;
+        all_done = 1;  // 모든 스레드가 완료되었는지 확인
+
+        // 1. 현재 실행 가능한 스레드 찾기
+        for (int i = 0; i < n; i++) {
+            if (left[i] > 0 && th[i].arrtime <= time) {  // 실행할 시간이 남은 스레드
+                all_done = 0;  // 아직 실행할 스레드가 있음
+                if (th[i].priority > max_priority) {  // 더 높은 우선순위를 가진 스레드 발견
+                    max_priority = th[i].priority;
+                    new_idx = i;
+                }
+            }
+        }
+
+        if (all_done) break;  // 모든 스레드가 끝났으면 종료
+
+        // 실행할 스레드가 없으면 시간을 증가
+        if (new_idx == -1) {
             time++;
             continue;
         }
-        if (th[idx].arrtime > time) {
-            fprintf(output, "- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
-            time = th[idx].arrtime;
+
+        // 현재 실행 중인 스레드와 새로운 스레드 비교
+        if (idx != new_idx) {  // 실행 스레드가 변경되었을 때
+            if (idx != -1 && left[idx] > 0) {  // 이전 스레드가 실행 중이라면 중단
+                printf("%s (%d)\n%d : ", th[idx].tid, th[idx].exetime - left[idx], time);
+            }
+
+            // 새 스레드 시작
+            idx = new_idx;
+            printf("%s (%d)\n%d : ", th[idx].tid, left[idx], time);
         }
+
+        // 현재 실행 중인 스레드 실행
         left[idx]--;
+
+        // 현재 스레드가 완료되었을 경우 처리
         if (left[idx] == 0) {
-            CT[4] += time + 1;
-            TAT[4] += CT[4] - th[idx].arrtime;
-            WT[4] += TAT[4] - th[idx].exetime;
+            int completion_time = time + 1;
+            int turnaround_time = completion_time - th[idx].arrtime;
+            int waiting_time = turnaround_time - th[idx].exetime;
+
+            CT[5] += completion_time;
+            TAT[5] += turnaround_time;
+            WT[5] += waiting_time;
         }
+
+        // 시간 증가
         time++;
     }
-    CT[4] /= n;
-    TAT[4] /= n;
-    WT[4] /= n;
+
+    // 평균 처리 시간 계산
+    CT[5] /= n;
+    TAT[5] /= n;
+    WT[5] /= n;
+
     return 0;
 }
 
 // RR
-int RR(int n, int time_slice) {
+/*int RR(int n, int time_slice) {
     printf("RR \n");
     int left[MAX];
 
@@ -308,36 +376,36 @@ int RR(int n, int time_slice) {
     }
 
     for (int i = 0; i < n; i++) {
-        CT[7] += time;
-        TAT[7] += CT[7] - th[i].arrtime;
-        WT[7] += TAT[7] - th[i].exetime;
+        CT[3] += time;
+        TAT[3] += CT[3] - th[i].arrtime;
+        WT[3] += TAT[3] - th[i].exetime;
     }
 
-    CT[7] /= n;
-    TAT[7] /= n;
-    WT[7] /= n;
+    CT[3] /= n;
+    TAT[3] /= n;
+    WT[3] /= n;
 
     return 0;
-}
+}*/
 
-void cpuschedule() {
+int main() {
     int i = 0;
-    char buffer[256];
+    char input[256];
     int threadnum = 0;
-    int time_slice = 10; //일단 임의로 할당함
+    int time_slice = 1; //일단 임의로 할당함
 
-    while (fgets(buffer, sizeof(buffer), input)) {
+    while (fgets(input, sizeof(input), stdin)) {
         // 입력이 "E"이면 종료
-        if (strcmp(buffer, "E\n") == 0 || strcmp(buffer, "E") == 0) {
+        if (strcmp(input, "E\n") == 0 || strcmp(input, "E") == 0) {
             break;
         }
 
         // 공백을 기준으로 문자열 분리
-        char* token = strtok(buffer, " ");
+        char* token = strtok(input, " ");
         if (token != NULL) {
             // 첫 번째 값: tid
             strncpy(th[i].tid, token, sizeof(th[i].tid) - 1);
-            th[i].tid[sizeof(th[i].tid) - 1] = '\0'; 
+            th[i].tid[sizeof(th[i].tid) - 1] = '\0'; // null-terminate
 
             // 두 번째 값: arrtime
             token = strtok(NULL, " ");
@@ -383,11 +451,11 @@ void cpuschedule() {
 
     // 알고리즘 실행 
     FCFS(threadnum);
-    SJF(threadnum);
-    SJFpree(threadnum);
-    LJF(threadnum);
-    LJFpree(threadnum);
-    RR(threadnum, time_slice);
+    //SJF(threadnum);
+    //SJFpree(threadnum);
+    PriorityNonPreemptive(threadnum);
+    PriorityPreemptive(threadnum);
+    //RR(threadnum, time_slice);
 
     // 타임 출력 
     const char* algo[] = {
@@ -400,91 +468,12 @@ void cpuschedule() {
         "priority (preemptive)",
         "RR"
     };
-    fprintf(output,"\n\nResults\t\tCompleted Time\tTurnaround Time\tWaiting Time\n");
-    fprintf(output,"------------------------------------------------------------------------\n");
+    printf("\n\nResults\t\t\tCompleted Time\tTurnaround Time\t\tWaiting Time\n");
+    printf("-----------------------------------------------------------------------------\n");
 
     for (int j = 0; j < 8; j++) {
-        fprintf(output,"%-25s\t%.2f\t\t%.2f\t\t%.2f\n", algo[j], CT[j], TAT[j], WT[j]);
-    }
-}
-
-int main(int argc, char* argv[]) {
-    char command[256];
-    strncpy(command,argv[1],sizeof(command)-1);
-    command[sizeof(command)-1]='\0';
-    char* input_file = argv[1];
-    input_file = strtok(argv[1], "<");
-    if (input_file == NULL) {
-        printf("Error: No '<' found in the command.\n");
-        return 1;
-    }
-    input_file = strtok(NULL, " ");
-
-
-    char* compare_file = argv[2];
-    char* output_file = "test_result.txt";
-    printf(input_file);
-    printf("\n");
-    input = fopen(input_file, "r");
-    if (input == NULL) {
-        printf("Error: No file\n");
-        return 1;
-    }
-    output = fopen(output_file, "w");
-    if (output == NULL) {
-        printf("Error: No file\n");
-        fclose(input);
-        return 1;
+        printf("%-25s\t%.2f\t\t%.2f\t\t%.2f\n", algo[j], CT[j], TAT[j], WT[j]);
     }
 
-    cpuschedule();
-
-    fclose(input);
-    fclose(output);
-
-    //아래부터 compare하는 코드 짜면 됨 
-    FILE* compare = fopen(compare_file, "r");
-    FILE* test = fopen(output_file, "r");
-    if (compare == NULL || test == NULL) {
-        printf("Error: No file\n");
-        if (compare) { fclose(compare); }
-        if (test) { fclose(test); }
-        return 1;
-    }
-
-    const char* algo[] = {
-        "FCFS : ",
-        "SJF (non preemptive) : ",
-        "SJF (preemptive) : ",
-        "LJF (non preemptive) : ",
-        "LJF (preemptive) : ",
-        "priority(non preemptive) : ",
-        "priority (preemptive) : ",
-        "RR : "
-    };
-
-    char buffer1[256],buffer2[256];
-
-    for (int i = 0; i < 8; i++) {
-        printf(algo[i]);
-
-        while (fgets(buffer1, sizeof(buffer1), compare) && fgets(buffer2, sizeof(buffer2), test)) {
-            //buffer1이 \n이면 while문 건너뛰어야 함 
-
-
-            if (strcmp(buffer1, buffer2) == 0) {
-                printf("PASS");
-            }
-            else {
-                printf("FAIL");
-            }
-            //#인지 검사 
-            if (strchr(buffer1, '#') != NULL) {
-                break;
-            }
-            
-            printf(", ");
-        }
-        printf("\n");
-    }
+    return 0;
 }
