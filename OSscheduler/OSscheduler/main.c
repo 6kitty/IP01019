@@ -225,7 +225,7 @@ int LJF(int n) {
 int LJFpree(int n) {
     fprintf(output, "LJF (Non-Preemptive)\n");
     int left[MAX];
-    fprintf("0 : ");
+    fprintf(output, "0 : ");
     for (int i = 0; i < n; i++) {
         left[i] = th[i].exetime;
     }
@@ -252,7 +252,7 @@ int LJFpree(int n) {
             continue;
         }
         if (th[idx].arrtime > time) {
-            printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
+            fprintf(output, "- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
             time = th[idx].arrtime;
         }
         left[idx]--;
