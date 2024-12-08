@@ -75,7 +75,7 @@ int FCFS(int n) {
 }
 
 // SJF (non-preemptive)
-/*int SJF(int n) {
+int SJF(int n) {
     printf("SJF (Non-Preemptive)\n");
     int nn = 0;
     int time = 0;
@@ -122,11 +122,11 @@ int FCFS(int n) {
     CT[1] /= n;
 
     return 0;
-}*/
+}
 
 
 // SJF (preemptive)
-/*int SJFpree(int n) {
+int SJFpree(int n) {
     printf("SJF (Preemptive)\n");
     int left[MAX];
 
@@ -182,13 +182,94 @@ int FCFS(int n) {
     WT[2] /= n;
 
     return 0;
-}*/
+}
 
-// LJF (non-preemptive)
+//LJF (non preemptive)
+int LJF(int n) {
+	fprintf(output, "LJF (Non-Preemptive)\n");
+	int nn = 0;
+	int time = 0;
+	fprintf(output, "0 : ");
+	while (nn < n) {
+		int idx = -1;
+		int max = -1;
+		for (int i = 0; i < n; i++) {
+			if (th[i].exetime <= 0) { continue; }
+			if (th[i].arrtime <= time && th[i].exetime > max) {
+				max = th[i].exetime;
+				idx = i;
+			}
+		}
+		if (idx == -1) {
+			time++;
+			continue;
+		}
+		if (th[idx].arrtime > time) {
+			fprintf(output, "- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
+			time = th[idx].arrtime;
+		}
+		fprintf(output, "%s (%d)\n%d : ", th[idx].tid, th[idx].exetime, time + th[idx].exetime);
+		WT[3] += time - th[idx].arrtime;
+		TAT[3] += time - th[idx].arrtime + th[idx].exetime;
+		CT[3] += time + th[idx].exetime;
+		time += th[idx].exetime;
+		th[idx].exetime = 0;
+		nn += 1;
+	}
+	fprintf(output, "#\n");
+	WT[3] /= n;
+	TAT[3] /= n;
+	CT[3] /= n;
+	return 0;
+}
 
-
-// LJF (preemptive)
-
+//LJF (preemptive)
+int LJFpree(int n) {
+	fprintf(output, "LJF (Non-Preemptive)\n");
+	int left[MAX];
+	fprintf("0 : ");
+	for (int i = 0; i < n; i++) {
+		left[i] = th[i].exetime;
+	}
+	int time = 0;
+	while (1) {
+		int idx = -1;
+		int max = -1;
+		for (int j = 0; j < n; j++) {
+			if (left[j] > 0 && th[j].arrtime <= time && left[j] > max) {
+				max = left[j];
+				idx = j;
+			}
+		}
+		if (idx == -1) {
+			int done = 1;
+			for (int j = 0; j < n; j++) {
+				if (left[j] > 0) {
+					done = 0;
+					break;
+				}
+			}
+			if (done) break;
+			time++;
+			continue;
+		}
+		if (th[idx].arrtime > time) {
+			printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
+			time = th[idx].arrtime;
+		}
+		left[idx]--;
+		if (left[idx] == 0) {
+			CT[4] += time + 1;
+			TAT[4] += CT[4] - th[idx].arrtime;
+			WT[4] += TAT[4] - th[idx].exetime;
+		}
+		time++;
+	}
+	CT[4] /= n;
+	TAT[4] /= n;
+	WT[4] /= n;
+	return 0;
+}
 
 // Priority (non-preemptive)
 int PriorityNonPreemptive(int n) {
@@ -256,7 +337,6 @@ int PriorityNonPreemptive(int n) {
 
     return 0;
 }
-
 
 // Priority (Preemptive)
 int PriorityPreemptive(int n) {
@@ -338,7 +418,7 @@ int PriorityPreemptive(int n) {
 }
 
 // RR
-/*int RR(int n, int time_slice) {
+int RR(int n, int time_slice) {
     printf("RR \n");
     int left[MAX];
 
@@ -386,7 +466,7 @@ int PriorityPreemptive(int n) {
     WT[3] /= n;
 
     return 0;
-}*/
+}
 
 int main() {
     int i = 0;
