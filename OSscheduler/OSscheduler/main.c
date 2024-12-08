@@ -182,6 +182,93 @@ int SJFpree(int n) {
     return 0;
 }
 
+// LJF (non-preemptive)
+int LJF(int n) {
+    fprintf(output, "LJF (Non-Preemptive)\n");
+    int nn = 0;
+    int time = 0;
+    fprintf(output, "0 : ");
+    while (nn < n) {
+        int idx = -1;
+        int max = -1;
+        for (int i = 0; i < n; i++) {
+            if (th[i].exetime <= 0) { continue; }
+            if (th[i].arrtime <= time && th[i].exetime > max) {
+                max = th[i].exetime;
+                idx = i;
+            }
+        }
+        if (idx == -1) {
+            time++;
+            continue;
+        }
+        if (th[idx].arrtime > time) {
+            fprintf(output, "- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
+            time = th[idx].arrtime;
+        }
+        fprintf(output, "%s (%d)\n%d : ", th[idx].tid, th[idx].exetime, time + th[idx].exetime);
+        WT[3] += time - th[idx].arrtime;
+        TAT[3] += time - th[idx].arrtime + th[idx].exetime;
+        CT[3] += time + th[idx].exetime;
+        time += th[idx].exetime;
+        th[idx].exetime = 0;
+        nn += 1;
+    }
+    fprintf(output, "#\n");
+    WT[3] /= n;
+    TAT[3] /= n;
+    CT[3] /= n;
+    return 0;
+}
+
+// LJF (preemptive)
+int LJFpree(int n) {
+    fprintf(output, "LJF (Non-Preemptive)\n");
+    int left[MAX];
+    fprintf("0 : ");
+    for (int i = 0; i < n; i++) {
+        left[i] = th[i].exetime;
+    }
+    int time = 0;
+    while (1) {
+        int idx = -1;
+        int max = -1;
+        for (int j = 0; j < n; j++) {
+            if (left[j] > 0 && th[j].arrtime <= time && left[j] > max) {
+                max = left[j];
+                idx = j;
+            }
+        }
+        if (idx == -1) {
+            int done = 1;
+            for (int j = 0; j < n; j++) {
+                if (left[j] > 0) {
+                    done = 0;
+                    break;
+                }
+            }
+            if (done) break;
+            time++;
+            continue;
+        }
+        if (th[idx].arrtime > time) {
+            printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
+            time = th[idx].arrtime;
+        }
+        left[idx]--;
+        if (left[idx] == 0) {
+            CT[4] += time + 1;
+            TAT[4] += CT[4] - th[idx].arrtime;
+            WT[4] += TAT[4] - th[idx].exetime;
+        }
+        time++;
+    }
+    CT[4] /= n;
+    TAT[4] /= n;
+    WT[4] /= n;
+    return 0;
+}
+
 // RR
 int RR(int n, int time_slice) {
     printf("RR \n");
@@ -221,14 +308,14 @@ int RR(int n, int time_slice) {
     }
 
     for (int i = 0; i < n; i++) {
-        CT[3] += time;
-        TAT[3] += CT[3] - th[i].arrtime;
-        WT[3] += TAT[3] - th[i].exetime;
+        CT[7] += time;
+        TAT[7] += CT[7] - th[i].arrtime;
+        WT[7] += TAT[7] - th[i].exetime;
     }
 
-    CT[3] /= n;
-    TAT[3] /= n;
-    WT[3] /= n;
+    CT[7] /= n;
+    TAT[7] /= n;
+    WT[7] /= n;
 
     return 0;
 }
@@ -298,6 +385,8 @@ void cpuschedule() {
     FCFS(threadnum);
     SJF(threadnum);
     SJFpree(threadnum);
+    LJF(threadnum);
+    LJFpree(threadnum);
     RR(threadnum, time_slice);
 
     // 타임 출력 
