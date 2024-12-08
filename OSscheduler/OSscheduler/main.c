@@ -74,7 +74,7 @@ int FCFS(int n) {
     return 0;
 }
 
-/ SJF (non-preemptive)
+// SJF (non-preemptive)
 int SJF(int n) {
     printf("SJF (Non-Preemptive)\n");
     int nn = 0;
@@ -133,15 +133,20 @@ int SJF(int n) {
 int SJFpree(int n) {
     printf("SJF (Preemptive)\n");
     int left[MAX];
-
-    printf("0 : ");
+    Thread th_copy[MAX];
+    memcpy(th_copy, th, sizeof(Thread) * n);
 
     for (int i = 0; i < n; i++) {
-        left[i] = th[i].exetime;
+        left[i] = th_copy[i].exetime;
     }
 
     int time = 0;
-    while (1) {
+    int completed = 0;
+    int current_thread = -1;
+
+    printf("0 : ");
+
+    while (completed < n) {
         int idx = -1;
         int min = MAX;
 
@@ -153,33 +158,29 @@ int SJFpree(int n) {
         }
 
         if (idx == -1) {
-            int done = 1;
-            for (int j = 0; j < n; j++) {
-                if (left[j] > 0) {
-                    done = 0;
-                    break;
-                }
-            }
-            if (done) break;
             time++;
             continue;
         }
 
-
-        if (th[idx].arrtime > time) {
-            printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
-            time = th[idx].arrtime;
+        if (current_thread != idx) {
+            printf("%s(%d)\n", th_copy[idx].tid, left[idx]);
+            current_thread = idx;
         }
 
-        left[idx]--;
-        if (left[idx] == 0) {
-            CT[2] += time + 1;
-            TAT[2] += CT[2] - th[idx].arrtime;
-            WT[2] += TAT[2] - th[idx].exetime;
+        int duration = left[idx];
+        time += duration;
+        left[idx] = 0;
+        completed++;
 
+        CT[2] += time;
+        TAT[2] += time - th_copy[idx].arrtime;
+        WT[2] += time - th_copy[idx].arrtime - th_copy[idx].exetime;
+
+        if (completed < n) {
+            printf("%d : ", time);
         }
-        time++;
     }
+    printf("%d : #\n", time);
 
     CT[2] /= n;
     TAT[2] /= n;
