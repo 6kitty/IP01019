@@ -108,3 +108,157 @@ int LJFpree(int n) {
 	WT[4] /= n;
 	return 0;
 }
+
+void cpuschedule() {
+    int i = 0;
+    char buffer[256];
+    int threadnum = 0;
+    int time_slice = 10; //일단 임의로 할당함
+
+    while (fgets(buffer, sizeof(buffer), input)) {
+        // 입력이 "E"이면 종료
+        if (strcmp(buffer, "E\n") == 0 || strcmp(buffer, "E") == 0) {
+            break;
+        }
+
+        // 공백을 기준으로 문자열 분리
+        char* token = strtok(buffer, " ");
+        if (token != NULL) {
+            // 첫 번째 값: tid
+            strncpy(th[i].tid, token, sizeof(th[i].tid) - 1);
+            th[i].tid[sizeof(th[i].tid) - 1] = '\0';
+
+            // 두 번째 값: arrtime
+            token = strtok(NULL, " ");
+            if (token != NULL) {
+                th[i].arrtime = atoi(token);
+            }
+            else {
+                printf("Error: No data\n");
+                continue;
+            }
+
+            // 세 번째 값: exetime
+            token = strtok(NULL, " ");
+            if (token != NULL) {
+                th[i].exetime = atoi(token);
+            }
+            else {
+                printf("Error: No data\n");
+                continue;
+            }
+
+            // 네 번째 값: priority
+            token = strtok(NULL, " ");
+            if (token != NULL) {
+                th[i].priority = atoi(token);
+            }
+            else {
+                printf("Error: No data\n");
+                continue;
+            }
+
+            i++; // 스레드 개수 증가
+
+            // 배열 초과 방지
+            if (i >= MAX) {
+                printf("WARNING: overflow\n");
+                break;
+            }
+        }
+    }
+
+    threadnum = i;
+
+    // 알고리즘 실행 
+    LJF(threadnum);
+    LJFpree(threadnum);
+    RR(threadnum, time_slice);
+
+    // 타임 출력 
+    const char* algo[] = {
+        "FCFS",
+        "SJF (non preemptive)",
+        "SJF (preemptive)",
+        "LJF (non preemptive)",
+        "LJF (preemptive)",
+        "priority(non preemptive)",
+        "priority (preemptive)",
+        "RR"
+    };
+    fprintf(output, "\n\nResults\t\tCompleted Time\tTurnaround Time\tWaiting Time\n");
+    fprintf(output, "------------------------------------------------------------------------\n");
+
+    for (int j = 0; j < 8; j++) {
+        fprintf(output, "%-25s\t%.2f\t\t%.2f\t\t%.2f\n", algo[j], CT[j], TAT[j], WT[j]);
+    }
+}
+
+int main(int argc, char* argv[]) {
+    //이거 strtok 해줘야할듯 
+    char* input_file = argv[1];
+    char* compare_file = argv[2];
+    char* output_file = "test_result.txt";
+
+    input = fopen(input_file, "r");
+    if (input == NULL) {
+        printf("Error: No file\n");
+        return 1;
+    }
+
+    output = fopen(output_file, "w");
+    if (output == NULL) {
+        printf("Error: No file\n");
+        fclose(input);
+        return 1;
+    }
+
+    cpuschedule();
+
+    fclose(input);
+    fclose(output);
+
+    //아래부터 compare하는 코드 짜면 됨 
+    FILE* compare = fopen(compare_file, "r");
+    FILE* test = fopen(output_file, "r");
+    if (compare == NULL || test == NULL) {
+        printf("Error: No file\n");
+        if (compare) { fclose(compare); }
+        if (test) { fclose(test); }
+        return 1;
+    }
+
+    const char* algo[] = {
+        "FCFS : ",
+        "SJF (non preemptive) : ",
+        "SJF (preemptive) : ",
+        "LJF (non preemptive) : ",
+        "LJF (preemptive) : ",
+        "priority(non preemptive) : ",
+        "priority (preemptive) : ",
+        "RR : "
+    };
+
+    char buffer1[256], buffer2[256];
+
+    for (int i = 0; i < 8; i++) {
+        printf(algo[i]);
+        while (fgets(buffer1, sizeof(buffer1), compare) && fgets(buffer2, sizeof(buffer2), test)) {
+            if (strcmp(buffer1, buffer2) == 0) {
+                printf("PASS");
+            }
+            else {
+                printf("FAIL");
+            }
+            //#인지 검사 
+            if (strchr(buffer1, '#') != NULL) {
+                break;
+            }
+
+            printf(", ");
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
