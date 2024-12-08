@@ -74,7 +74,7 @@ int FCFS(int n) {
     return 0;
 }
 
-// SJF (non-preemptive)
+/ SJF (non-preemptive)
 int SJF(int n) {
     printf("SJF (Non-Preemptive)\n");
     int nn = 0;
@@ -82,14 +82,18 @@ int SJF(int n) {
 
     printf("0 : ");
 
+    // 스레드 데이터를 복사하여 독립적인 실행을 보장
+    Thread th_copy[MAX];
+    memcpy(th_copy, th, sizeof(Thread) * n);
+
     while (nn < n) {
         int idx = -1;
         int min = MAX;
 
         for (int i = 0; i < n; i++) {
-            if (th[i].exetime <= 0) { continue; }
-            if (th[i].arrtime <= time && th[i].exetime < min) {
-                min = th[i].exetime;
+            if (th_copy[i].exetime <= 0) { continue; }
+            if (th_copy[i].arrtime <= time && th_copy[i].exetime < min) {
+                min = th_copy[i].exetime;
                 idx = i;
             }
         }
@@ -99,19 +103,19 @@ int SJF(int n) {
             continue;
         }
 
-        if (th[idx].arrtime > time) {
-            printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
-            time = th[idx].arrtime;
+        if (th_copy[idx].arrtime > time) {
+            printf("- (%d)\n%d : ", th_copy[idx].arrtime, th_copy[idx].arrtime + time);
+            time = th_copy[idx].arrtime;
         }
 
-        printf("%s (%d)\n%d : ", th[idx].tid, th[idx].exetime, time + th[idx].exetime);
+        printf("%s (%d)\n%d : ", th_copy[idx].tid, th_copy[idx].exetime, time + th_copy[idx].exetime);
 
-        WT[1] += time - th[idx].arrtime;
-        TAT[1] += time - th[idx].arrtime + th[idx].exetime;
-        CT[1] += time + th[idx].exetime;
+        WT[1] += time - th_copy[idx].arrtime;
+        TAT[1] += time - th_copy[idx].arrtime + th_copy[idx].exetime;
+        CT[1] += time + th_copy[idx].exetime;
 
-        time += th[idx].exetime;
-        th[idx].exetime = 0;
+        time += th_copy[idx].exetime;
+        th_copy[idx].exetime = 0;  // 실행 후 복사본에서만 값 변경
         nn += 1;
     }
 
@@ -186,46 +190,44 @@ int SJFpree(int n) {
 
 //LJF (non preemptive)
 int LJF(int n) {
-	printf("LJF (Non-Preemptive)\n");
-	int nn = 0;
-	int time = 0;
-	printf("0 : ");
-	while (nn < n) {
-		int idx = -1;
-		int max = -1;
-		for (int i = 0; i < n; i++) {
-			if (th[i].exetime <= 0) { continue; }
-			if (th[i].arrtime <= time && th[i].exetime > max) {
-				max = th[i].exetime;
-				idx = i;
-			}
-		}
-		if (idx == -1) {
-			time++;
-			continue;
-		}
-		if (th[idx].arrtime > time) {
-			printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
-			time = th[idx].arrtime;
-		}
-		printf("%s (%d)\n%d : ", th[idx].tid, th[idx].exetime, time + th[idx].exetime);
-		WT[3] += time - th[idx].arrtime;
-		TAT[3] += time - th[idx].arrtime + th[idx].exetime;
-		CT[3] += time + th[idx].exetime;
-		time += th[idx].exetime;
-		th[idx].exetime = 0;
-		nn += 1;
-	}
-	printf("#\n");
-	WT[3] /= n;
-	TAT[3] /= n;
-	CT[3] /= n;
-	return 0;
+    printf("LJF (Non-Preemptive)\n");
+    int nn = 0; // 완료된 스레드 개수
+    int time = 0; // 현재 시간
+    printf("0 : ");
+    // 스레드 데이터를 복사하여 독립적인 실행을 보장
+    Thread th_copy[MAX];
+    memcpy(th_copy, th, sizeof(Thread) * n);
+    while (nn < n) {
+        int idx = -1;
+        int max = -1;
+        for (int i = 0; i < n; i++) {
+            if (th_copy[i].exetime > 0 && th_copy[i].arrtime <= time && th_copy[i].exetime > max) {
+                max = th_copy[i].exetime;
+                idx = i;
+            }
+        }
+        if (idx == -1) {
+            time++;
+            continue;
+        }
+        printf("%s (%d)\n%d : ", th_copy[idx].tid, th_copy[idx].exetime, time + th_copy[idx].exetime);
+        WT[3] += time - th_copy[idx].arrtime;
+        TAT[3] += time - th_copy[idx].arrtime + th_copy[idx].exetime;
+        CT[3] += time + th_copy[idx].exetime;
+        time += th_copy[idx].exetime;
+        th_copy[idx].exetime = 0;  // 실행 후 복사본에서만 값 변경
+        nn += 1;
+    }
+    printf("#\n");
+    WT[3] /= n;
+    TAT[3] /= n;
+    CT[3] /= n;
+    return 0;
 }
 
 //LJF (preemptive)
 int LJFpree(int n) {
-	printf("LJF (Non-Preemptive)\n");
+	printf("LJF (Preemptive)\n");
 	int left[MAX];
 	printf("0 : ");
 	for (int i = 0; i < n; i++) {
