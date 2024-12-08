@@ -400,9 +400,9 @@ int PriorityPreemptive(int n) {
             int turnaround_time = completion_time - th[idx].arrtime;
             int waiting_time = turnaround_time - th[idx].exetime;
 
-            CT[5] += completion_time;
-            TAT[5] += turnaround_time;
-            WT[5] += waiting_time;
+            CT[6] += completion_time;
+            TAT[6] += turnaround_time;
+            WT[6] += waiting_time;
         }
 
         // 시간 증가
@@ -410,9 +410,9 @@ int PriorityPreemptive(int n) {
     }
 
     // 평균 처리 시간 계산
-    CT[5] /= n;
-    TAT[5] /= n;
-    WT[5] /= n;
+    CT[6] /= n;
+    TAT[6] /= n;
+    WT[6] /= n;
 
     return 0;
 }
@@ -456,14 +456,14 @@ int RR(int n, int time_slice) {
     }
 
     for (int i = 0; i < n; i++) {
-        CT[3] += time;
-        TAT[3] += CT[3] - th[i].arrtime;
-        WT[3] += TAT[3] - th[i].exetime;
+        CT[7] += time;
+        TAT[7] += CT[7] - th[i].arrtime;
+        WT[7] += TAT[7] - th[i].exetime;
     }
 
-    CT[3] /= n;
-    TAT[3] /= n;
-    WT[3] /= n;
+    CT[7] /= n;
+    TAT[7] /= n;
+    WT[7] /= n;
 
     return 0;
 }
