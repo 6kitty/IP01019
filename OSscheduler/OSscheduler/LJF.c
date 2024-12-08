@@ -14,8 +14,13 @@ int LJF(char thread[], int arrtime[], int exetime[], int n) {
 	int i, time = 0;
 	int finish[100] = { 0 };
 	printf("LJF (non preemptive)\n");
+	printf("0 : ");
 	while (i < n) {
-
+		int idx = -1;
+		int max = -1;
+		for (i = 0; i < n; i++) {
+			if(!finish)
+		}
 	}
 }
 
