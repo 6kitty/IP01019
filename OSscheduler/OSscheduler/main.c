@@ -409,17 +409,27 @@ void cpuschedule() {
 }
 
 int main(int argc, char* argv[]) {
-    //이거 strtok 해줘야할듯 
+    char command[256];
+    strncpy(command,argv[1],sizeof(command)-1);
+    command[sizeof(command)-1]='\0';
     char* input_file = argv[1];
+    input_file = strtok(argv[1], "<");
+    if (input_file == NULL) {
+        printf("Error: No '<' found in the command.\n");
+        return 1;
+    }
+    input_file = strtok(NULL, " ");
+
+
     char* compare_file = argv[2];
     char* output_file = "test_result.txt";
-
+    printf(input_file);
+    printf("\n");
     input = fopen(input_file, "r");
     if (input == NULL) {
         printf("Error: No file\n");
         return 1;
     }
-
     output = fopen(output_file, "w");
     if (output == NULL) {
         printf("Error: No file\n");
@@ -457,7 +467,11 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < 8; i++) {
         printf(algo[i]);
+
         while (fgets(buffer1, sizeof(buffer1), compare) && fgets(buffer2, sizeof(buffer2), test)) {
+            //buffer1이 \n이면 while문 건너뛰어야 함 
+
+
             if (strcmp(buffer1, buffer2) == 0) {
                 printf("PASS");
             }
@@ -468,11 +482,9 @@ int main(int argc, char* argv[]) {
             if (strchr(buffer1, '#') != NULL) {
                 break;
             }
-        
+            
             printf(", ");
         }
         printf("\n");
     }
-
-    return 0;
 }
