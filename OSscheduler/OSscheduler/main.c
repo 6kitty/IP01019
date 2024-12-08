@@ -344,4 +344,46 @@ int main(int argc, char* argv[]) {
     fclose(output);
 
     //아래부터 compare하는 코드 짜면 됨 
+    FILE* compare = fopen(compare_file, "r");
+    FILE* test = fopen(output_file, "r");
+    if (compare == NULL || test == NULL) {
+        printf("Error: No file\n");
+        if (compare) { fclose(compare); }
+        if (test) { fclose(test); }
+        return 1;
+    }
+
+    const char* algo[] = {
+        "FCFS : ",
+        "SJF (non preemptive) : ",
+        "SJF (preemptive) : ",
+        "LJF (non preemptive) : ",
+        "LJF (preemptive) : ",
+        "priority(non preemptive) : ",
+        "priority (preemptive) : ",
+        "RR : "
+    };
+
+    char buffer1[256],buffer2[256];
+
+    for (int i = 0; i < 8; i++) {
+        printf(algo[i]);
+        while (fgets(buffer1, sizeof(buffer1), compare) && fgets(buffer2, sizeof(buffer2), test)) {
+            if (strcmp(buffer1, buffer2) == 0) {
+                printf("PASS");
+            }
+            else {
+                printf("FAIL");
+            }
+            //#인지 검사 
+            if (strchr(buffer1, '#') != NULL) {
+                break;
+            }
+        
+            printf(", ");
+        }
+        printf("\n");
+    }
+
+    return 0;
 }
