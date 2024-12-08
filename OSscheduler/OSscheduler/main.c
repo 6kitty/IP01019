@@ -72,7 +72,7 @@ int FCFS(int n) {
 }
 
 // SJF (non-preemptive)
-int SJF_NonPreemptive(int n) {
+int SJF(int n) {
     printf("SJF (Non-Preemptive)\n");
     int nn = 0;
     int time = 0;
@@ -122,7 +122,7 @@ int SJF_NonPreemptive(int n) {
 }
 
 // SJF (preemptive)
-int SJF_Preemptive(int n) {
+int SJFpree(int n) {
     printf("SJF (Preemptive)\n");
     int left[MAX];
 
@@ -293,8 +293,8 @@ int main() {
 
     // 알고리즘 실행 
     FCFS(threadnum);
-    SJF_NonPreemptive(threadnum);
-    SJF_Preemptive(threadnum);
+    SJF(threadnum);
+    SJFpree(threadnum);
     RR(threadnum, time_slice);
 
     // 타임 출력 
