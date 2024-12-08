@@ -21,6 +21,9 @@ typedef struct {
 
 Thread th[MAX];
 
+FILE* input = NULL;
+FILE* output = NULL;
+
 // FCFS
 int FCFS(int n) {
     printf("FCFS\n");
@@ -230,24 +233,24 @@ int RR(int n, int time_slice) {
     return 0;
 }
 
-int main() {
+void cpuschedule() {
     int i = 0;
-    char input[256];
+    char buffer[256];
     int threadnum = 0;
     int time_slice = 10; //일단 임의로 할당함
 
-    while (fgets(input, sizeof(input), stdin)) {
+    while (fgets(buffer, sizeof(buffer), input)) {
         // 입력이 "E"이면 종료
-        if (strcmp(input, "E\n") == 0 || strcmp(input, "E") == 0) {
+        if (strcmp(buffer, "E\n") == 0 || strcmp(buffer, "E") == 0) {
             break;
         }
 
         // 공백을 기준으로 문자열 분리
-        char* token = strtok(input, " ");
+        char* token = strtok(buffer, " ");
         if (token != NULL) {
             // 첫 번째 값: tid
             strncpy(th[i].tid, token, sizeof(th[i].tid) - 1);
-            th[i].tid[sizeof(th[i].tid) - 1] = '\0'; // null-terminate
+            th[i].tid[sizeof(th[i].tid) - 1] = '\0'; 
 
             // 두 번째 값: arrtime
             token = strtok(NULL, " ");
@@ -308,12 +311,37 @@ int main() {
         "priority (preemptive)",
         "RR"
     };
-    printf("\n\nResults\t\tCompleted Time\tTurnaround Time\tWaiting Time\n");
-    printf("------------------------------------------------------------------------\n");
+    fprintf(output,"\n\nResults\t\tCompleted Time\tTurnaround Time\tWaiting Time\n");
+    fprintf(output,"------------------------------------------------------------------------\n");
 
     for (int j = 0; j < 8; j++) {
-        printf("%-25s\t%.2f\t\t%.2f\t\t%.2f\n", algo[j], CT[j], TAT[j], WT[j]);
+        fprintf(output,"%-25s\t%.2f\t\t%.2f\t\t%.2f\n", algo[j], CT[j], TAT[j], WT[j]);
+    }
+}
+
+int main(int argc, char* argv[]) {
+    //이거 strtok 해줘야할듯 
+    char* input_file = argv[1];
+    char* compare_file = argv[2];
+    char* output_file = "test_result.txt";
+
+    input = fopen(input_file, "r");
+    if (input == NULL) {
+        printf("Error: No file\n");
+        return 1;
     }
 
-    return 0;
+    output = fopen(output_file, "w");
+    if (output == NULL) {
+        printf("Error: No file\n");
+        fclose(input);
+        return 1;
+    }
+
+    cpuschedule();
+
+    fclose(input);
+    fclose(output);
+
+    //아래부터 compare하는 코드 짜면 됨 
 }
