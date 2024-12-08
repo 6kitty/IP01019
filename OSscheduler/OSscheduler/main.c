@@ -2,9 +2,9 @@
 #include <stdio.h> 
 #include <string.h>
 #include <stdlib.h>
-#include <limits.h> //int때문에?
+#include <limits.h>
 
-// 시간 전역 변수 
+// 시간 전역 변수
 float CT[8] = { 0, };
 float TAT[8] = { 0, };
 float WT[8] = { 0, };
@@ -37,7 +37,7 @@ int FCFS(int n) {
 
 
         for (int i = 0; i < n; i++) {
-            if (th[i].exetime<=0) { continue; }
+            if (th[i].exetime <= 0) { continue; }
 
             if (idx == -1 || th[i].arrtime < th[idx].arrtime) {
                 idx = i;
@@ -55,14 +55,14 @@ int FCFS(int n) {
 
         WT[0] += time - th[idx].arrtime;
         TAT[0] += time - th[idx].arrtime + th[idx].exetime;
-        CT[0] += time+th[idx].exetime;
+        CT[0] += time + th[idx].exetime;
 
         time += th[idx].exetime;
         th[idx].exetime = 0;
         nn += 1;
     }
 
-    printf("#");
+    printf("#\n");
 
     WT[0] /= n;
     TAT[0] /= n;
@@ -71,11 +71,171 @@ int FCFS(int n) {
     return 0;
 }
 
+// SJF (non-preemptive)
+int SJF_NonPreemptive(int n) {
+    printf("SJF (Non-Preemptive)\n");
+    int nn = 0;
+    int time = 0;
+
+    printf("0 : ");
+
+    while (nn < n) {
+        int idx = -1;
+        int min = MAX;
+
+        for (int i = 0; i < n; i++) {
+            if (th[i].exetime <= 0) { continue; }
+            if (th[i].arrtime <= time && th[i].exetime < min) {
+                min = th[i].exetime;
+                idx = i;
+            }
+        }
+
+        if (idx == -1) {
+            time++;
+            continue;
+        }
+
+        if (th[idx].arrtime > time) {
+            printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
+            time = th[idx].arrtime;
+        }
+
+        printf("%s (%d)\n%d : ", th[idx].tid, th[idx].exetime, time + th[idx].exetime);
+
+        WT[1] += time - th[idx].arrtime;
+        TAT[1] += time - th[idx].arrtime + th[idx].exetime;
+        CT[1] += time + th[idx].exetime;
+
+        time += th[idx].exetime;
+        th[idx].exetime = 0;
+        nn += 1;
+    }
+
+    printf("#\n");
+
+    WT[1] /= n;
+    TAT[1] /= n;
+    CT[1] /= n;
+
+    return 0;
+}
+
+// SJF (preemptive)
+int SJF_Preemptive(int n) {
+    printf("SJF (Preemptive)\n");
+    int left[MAX];
+
+    printf("0 : ");
+
+    for (int i = 0; i < n; i++) {
+        left[i] = th[i].exetime;
+    }
+
+    int time = 0;
+    while (1) {
+        int idx = -1;
+        int min = MAX;
+
+        for (int j = 0; j < n; j++) {
+            if (left[j] > 0 && th[j].arrtime <= time && left[j] < min) {
+                min = left[j];
+                idx = j;
+            }
+        }
+
+        if (idx == -1) {
+            int done = 1;
+            for (int j = 0; j < n; j++) {
+                if (left[j] > 0) {
+                    done = 0;
+                    break;
+                }
+            }
+            if (done) break;
+            time++;
+            continue;
+        }
+
+
+        if (th[idx].arrtime > time) {
+            printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
+            time = th[idx].arrtime;
+        }
+
+        left[idx]--;
+        if (left[idx] == 0) {
+            CT[2] += time + 1;
+            TAT[2] += CT[2] - th[idx].arrtime;
+            WT[2] += TAT[2] - th[idx].exetime;
+        }
+        time++;
+    }
+
+    CT[2] /= n;
+    TAT[2] /= n;
+    WT[2] /= n;
+
+    return 0;
+}
+
+// RR
+int RR(int n, int time_slice) {
+    printf("RR \n");
+    int left[MAX];
+
+    printf("0 : ");
+
+    for (int i = 0; i < n; i++) {
+        left[i] = th[i].exetime;
+    }
+
+    int time = 0;
+    while (1) {
+        int done = 1;
+
+        for (int i = 0; i < n; i++) {
+            if (left[i] > 0) {
+                done = 0;
+
+                if (th[i].arrtime <= time) {
+                    if (left[i] > time_slice) {
+                        printf("%s (%d)\n%d : ", th[i].tid, time_slice, time + time_slice);
+                        left[i] -= time_slice;
+                        time += time_slice;
+                    }
+                    else {
+                        printf("%s (%d)\n%d : ", th[i].tid, left[i], time + left[i]);
+                        time += left[i];
+                        left[i] = 0;
+                    }
+                }
+            }
+        }
+
+        if (done) break;
+        time++;
+    }
+
+    for (int i = 0; i < n; i++) {
+        CT[3] += time;
+        TAT[3] += CT[3] - th[i].arrtime;
+        WT[3] += TAT[3] - th[i].exetime;
+    }
+
+    CT[3] /= n;
+    TAT[3] /= n;
+    WT[3] /= n;
+
+    return 0;
+}
 
 int main() {
     int i = 0;
     char input[256];
     int threadnum = 0;
+    int time_slice = 10; //일단 임의로 할당함
+
     while (fgets(input, sizeof(input), stdin)) {
         // 입력이 "E"이면 종료
         if (strcmp(input, "E\n") == 0 || strcmp(input, "E") == 0) {
@@ -133,17 +293,20 @@ int main() {
 
     // 알고리즘 실행 
     FCFS(threadnum);
+    SJF_NonPreemptive(threadnum);
+    SJF_Preemptive(threadnum);
+    RR(threadnum, time_slice);
 
     // 타임 출력 
     const char* algo[] = {
-    "FCFS",
-    "SJF (non preemptive)",
-    "SJF (preemptive)",
-    "LJF (non preemptive)",
-    "LJF (preemptive)",
-    "priority(non preemptive)",
-    "priority (preemptive)",
-    "RR"
+        "FCFS",
+        "SJF (non preemptive)",
+        "SJF (preemptive)",
+        "LJF (non preemptive)",
+        "LJF (preemptive)",
+        "priority(non preemptive)",
+        "priority (preemptive)",
+        "RR"
     };
     printf("\n\nResults\t\tCompleted Time\tTurnaround Time\tWaiting Time\n");
     printf("------------------------------------------------------------------------\n");
@@ -151,4 +314,6 @@ int main() {
     for (int j = 0; j < 8; j++) {
         printf("%-25s\t%.2f\t\t%.2f\t\t%.2f\n", algo[j], CT[j], TAT[j], WT[j]);
     }
+
+    return 0;
 }
