@@ -230,12 +230,13 @@ int LJF(int n) {
 
 int left[MAX];  // 남은 실행 시간
 
-// LJF 기준으로 가장 긴 실행 시간을 가진 스레드 찾기
+// 가장 긴 남은 실행 시간을 가진 작업 찾기
 int findLongestJob(int n, int time) {
     int idx = -1;
+
     for (int i = 0; i < n; i++) {
-        if (th[i].arrtime <= time && left[i] > 0) { // 실행 가능한 스레드만 고려
-            if (idx == -1 || left[idx] < left[i]) {  // 남은 실행 시간이 더 긴 스레드 선택
+        if (th[i].arrtime <= time && left[i] > 0) { // 실행 가능한 작업만 고려
+            if (idx == -1 || left[idx] < left[i]) { // 남은 실행 시간이 더 긴 작업 선택
                 idx = i;
             }
         }
@@ -243,57 +244,85 @@ int findLongestJob(int n, int time) {
     return idx;
 }
 
-// LJF (Preemptive)
+// 스케줄러 함수
 int LJFpree(int n) {
-    printf("\nLJF (Preemptive)\n");
+    printf("\nLJF (preemptive)\n");
 
-    int time = 0;   // 현재 시간
-    int completed = 0; // 완료된 작업 수
-    int prev_idx = -1; // 이전에 실행 중이던 스레드 인덱스
-    int prev_time = 0; // 이전 시간
+    int time = 0;         // 현재 시간
+    int completed = 0;    // 완료된 작업 수
+    int prev_idx = -1;    // 이전에 실행 중이던 작업 인덱스
+    int prev_time = 0;    // 이전 작업 시작 시간
 
-    // 각 스레드의 남은 실행 시간을 초기화
+    // 각 작업의 남은 실행 시간을 초기화
     for (int i = 0; i < n; i++) {
         left[i] = th[i].exetime;
     }
 
-    while (completed < n) {
-        int idx = findLongestJob(n, time); // 현재 시간에 실행 가능한 남은 실행 시간이 가장 긴 스레드
+    printf("0 : ");
 
-        if (idx == -1) { // 실행 가능한 스레드가 없으면 시간 증가
+    while (completed < n) {
+        int idx = prev_idx; // 기본값: 이전 작업 유지
+
+        // 1. 현재 시간에 도착한 작업이 있거나 실행 중인 작업이 완료되었을 때만 새 작업 선택
+        int new_job_arrived = 0;
+        //작업 완료되면 prev_idx를 -1로 초기화함 
+        if (prev_idx == -1)
+            new_job_arrived = 1;
+        for (int i = 0; i < n; i++) {
+            if (th[i].arrtime == time) { // 새로운 작업 도착 확인
+                new_job_arrived = 1;
+                break;
+            }
+        }
+        
+
+        if (new_job_arrived || (prev_idx != -1 && left[prev_idx] == 0)) {
+            idx = findLongestJob(n, time); // 새로운 작업 선택
+        }
+
+        // 2. 실행할 작업이 없으면 시간 증가
+        if (idx == -1) {
             time++;
             continue;
         }
 
-        // 스레드 변경 시 시작 시간과 실행시간 기록
+        // 3. 작업 변경 시 실행 시간 기록
         if (idx != prev_idx) {
-            // 이전 시간과 차이를 계산해서 출력
-            if (prev_idx != -1) {
-                printf("%d : %s (%d) \n", prev_time, th[prev_idx].tid, time - prev_time); // 실행된 시간
+            if (prev_idx != -1 && left[prev_idx] > 0) {
+                printf("%s (%d)\n%d : ",th[prev_idx].tid, time - prev_time,time);
             }
             prev_time = time;
             prev_idx = idx;
         }
 
-        // 1단위 시간 실행
+        // 4. 작업 실행
         left[idx]--;
         time++;
 
-        // 스레드 완료 처리
+        // 5. 작업 완료 처리
         if (left[idx] == 0) {
             completed++;
+            printf("%s (%d)\n%d : ", th[idx].tid, time - prev_time,time);
+
+            WT[4] += time - th[idx].arrtime - th[idx].exetime;
+            TAT[4] += time - th[idx].arrtime;
+            CT[4] += time;
+
+            prev_time = time;
+            prev_idx = -1; // 현재 작업 완료 후 초기화
+
         }
     }
 
-    // 마지막으로 실행된 스레드 처리
-    printf("%d : %s (%d) \n", prev_time, th[prev_idx].tid, time - prev_time);
-    printf("%d : #\n", time);
+    // 마지막으로 처리된 시간 출력
+    printf("#\n", time);
+
+    WT[4] /= n;
+    TAT[4] /= n;
+    CT[4] /= n;
 
     return 0;
 }
-
-
-
 
 // Priority (non-preemptive)
 int PriorityNonPreemptive(int n) {
