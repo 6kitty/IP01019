@@ -163,7 +163,7 @@ int SJFpree(int n) {
         }
 
         if (current_thread != idx) {
-            printf("%s(%d)\n", th_copy[idx].tid, left[idx]);
+            printf("%s (%d)\n", th_copy[idx].tid, left[idx]);
             current_thread = idx;
         }
 
@@ -226,52 +226,64 @@ int LJF(int n) {
     return 0;
 }
 
-//LJF (preemptive)
+// LJF (preemptive)
 int LJFpree(int n) {
-	printf("LJF (Preemptive)\n");
-	int left[MAX];
-	printf("0 : ");
-	for (int i = 0; i < n; i++) {
-		left[i] = th[i].exetime;
-	}
-	int time = 0;
-	while (1) {
-		int idx = -1;
-		int max = -1;
-		for (int j = 0; j < n; j++) {
-			if (left[j] > 0 && th[j].arrtime <= time && left[j] > max) {
-				max = left[j];
-				idx = j;
-			}
-		}
-		if (idx == -1) {
-			int done = 1;
-			for (int j = 0; j < n; j++) {
-				if (left[j] > 0) {
-					done = 0;
-					break;
-				}
-			}
-			if (done) break;
-			time++;
-			continue;
-		}
-		if (th[idx].arrtime > time) {
-			printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
-			time = th[idx].arrtime;
-		}
-		left[idx]--;
-		if (left[idx] == 0) {
-			CT[4] += time + 1;
-			TAT[4] += CT[4] - th[idx].arrtime;
-			WT[4] += TAT[4] - th[idx].exetime;
-		}
-		time++;
-	}
-	CT[4] /= n;
-	TAT[4] /= n;
-	WT[4] /= n;
-	return 0;
+    printf("LJF (Preemptive)\n");
+    int left[MAX];
+    Thread th_copy[MAX];
+    memcpy(th_copy, th, sizeof(Thread) * n);
+
+    for (int i = 0; i < n; i++) {
+        left[i] = th_copy[i].exetime;
+    }
+
+    int time = 0;
+    int completed = 0; // 모든 프로세스 완료 반복
+    int current_thread = -1; // 현재 실행 중인 프로세스 추적
+
+    printf("0 : ");
+
+    while (completed < n) {
+        int idx = -1;
+        int max = -1;
+
+        for (int j = 0; j < n; j++) {
+            if (left[j] > 0 && th[j].arrtime <= time && left[j] > max) {
+                max = left[j];
+                idx = j;
+            }
+        }
+
+        if (idx == -1) {
+            time++;
+            continue;
+        }
+
+        if (current_thread != idx) {
+            printf("%s (%d)\n", th_copy[idx].tid, left[idx]);
+            current_thread = idx;
+        }
+
+        int duration = left[idx];
+        time += duration;
+        left[idx] = 0;
+        completed++;
+
+        CT[4] += time;
+        TAT[4] += time - th_copy[idx].arrtime;
+        WT[4] += time - th_copy[idx].arrtime - th_copy[idx].exetime;
+
+        if (completed < n) {
+            printf("%d : ", time);
+        }
+    }
+    printf("%d : #\n", time);
+
+    CT[4] /= n;
+    TAT[4] /= n;
+    WT[4] /= n;
+
+    return 0;
 }
 
 // Priority (non-preemptive)
