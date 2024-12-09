@@ -75,21 +75,25 @@ int FCFS(int n) {
 }
 
 // SJF (non-preemptive)
-/*int SJF(int n) {
-    printf("SJF (Non-Preemptive)\n");
+int SJF(int n) {
+    printf("\nSJF (Non-Preemptive)\n");
     int nn = 0;
     int time = 0;
 
     printf("0 : ");
+
+    // 스레드 데이터를 복사하여 독립적인 실행을 보장
+    Thread th_copy[MAX];
+    memcpy(th_copy, th, sizeof(Thread) * n);
 
     while (nn < n) {
         int idx = -1;
         int min = MAX;
 
         for (int i = 0; i < n; i++) {
-            if (th[i].exetime <= 0) { continue; }
-            if (th[i].arrtime <= time && th[i].exetime < min) {
-                min = th[i].exetime;
+            if (th_copy[i].exetime <= 0) { continue; }
+            if (th_copy[i].arrtime <= time && th_copy[i].exetime < min) {
+                min = th_copy[i].exetime;
                 idx = i;
             }
         }
@@ -99,19 +103,19 @@ int FCFS(int n) {
             continue;
         }
 
-        if (th[idx].arrtime > time) {
-            printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
-            time = th[idx].arrtime;
+        if (th_copy[idx].arrtime > time) {
+            printf("- (%d)\n%d : ", th_copy[idx].arrtime, th_copy[idx].arrtime + time);
+            time = th_copy[idx].arrtime;
         }
 
-        printf("%s (%d)\n%d : ", th[idx].tid, th[idx].exetime, time + th[idx].exetime);
+        printf("%s (%d)\n%d : ", th_copy[idx].tid, th_copy[idx].exetime, time + th_copy[idx].exetime);
 
-        WT[1] += time - th[idx].arrtime;
-        TAT[1] += time - th[idx].arrtime + th[idx].exetime;
-        CT[1] += time + th[idx].exetime;
+        WT[1] += time - th_copy[idx].arrtime;
+        TAT[1] += time - th_copy[idx].arrtime + th_copy[idx].exetime;
+        CT[1] += time + th_copy[idx].exetime;
 
-        time += th[idx].exetime;
-        th[idx].exetime = 0;
+        time += th_copy[idx].exetime;
+        th_copy[idx].exetime = 0;  // 실행 후 복사본에서만 값 변경
         nn += 1;
     }
 
@@ -122,22 +126,27 @@ int FCFS(int n) {
     CT[1] /= n;
 
     return 0;
-}*/
+}
 
 
 // SJF (preemptive)
-/*int SJFpree(int n) {
-    printf("SJF (Preemptive)\n");
+int SJFpree(int n) {
+    printf("\nSJF (Preemptive)\n");
     int left[MAX];
-
-    printf("0 : ");
+    Thread th_copy[MAX];
+    memcpy(th_copy, th, sizeof(Thread) * n);
 
     for (int i = 0; i < n; i++) {
-        left[i] = th[i].exetime;
+        left[i] = th_copy[i].exetime;
     }
 
     int time = 0;
-    while (1) {
+    int completed = 0;
+    int current_thread = -1;
+
+    printf("0 : ");
+
+    while (completed < n) {
         int idx = -1;
         int min = MAX;
 
@@ -149,40 +158,37 @@ int FCFS(int n) {
         }
 
         if (idx == -1) {
-            int done = 1;
-            for (int j = 0; j < n; j++) {
-                if (left[j] > 0) {
-                    done = 0;
-                    break;
-                }
-            }
-            if (done) break;
             time++;
             continue;
         }
 
-
-        if (th[idx].arrtime > time) {
-            printf("- (%d)\n%d : ", th[idx].arrtime, th[idx].arrtime + time);
-            time = th[idx].arrtime;
+        if (current_thread != idx) {
+            printf("%s (%d)\n", th_copy[idx].tid, left[idx]);
+            current_thread = idx;
         }
 
-        left[idx]--;
-        if (left[idx] == 0) {
-            CT[2] += time + 1;
-            TAT[2] += CT[2] - th[idx].arrtime;
-            WT[2] += TAT[2] - th[idx].exetime;
+        int duration = left[idx];
+        time += duration;
+        left[idx] = 0;
+        completed++;
 
+        CT[2] += time;
+        TAT[2] += time - th_copy[idx].arrtime;
+        WT[2] += time - th_copy[idx].arrtime - th_copy[idx].exetime;
+
+        if (completed < n) {
+            printf("%d : ", time);
         }
-        time++;
     }
+    printf("%d : #\n", time);
 
     CT[2] /= n;
     TAT[2] /= n;
     WT[2] /= n;
 
     return 0;
-}*/
+}
+
 
 //LJF (non preemptive)
 int LJF(int n) {
@@ -298,7 +304,7 @@ int PriorityNonPreemptive(int n) {
         return -1;
     }
 
-    //printf("0 : ");
+    printf("0 : ");
 
     Thread th_copy[MAX];
     memcpy(th_copy, th, sizeof(Thread) * n);
@@ -337,9 +343,9 @@ int PriorityNonPreemptive(int n) {
         printf("%s (%d)\n%d : ", th_copy[idx].tid, th_copy[idx].exetime, time + th_copy[idx].exetime);
 
         // 대기 시간, 반환 시간, 완료 시간 계산
-        WT[0] += time - th_copy[idx].arrtime;
-        TAT[0] += time - th_copy[idx].arrtime + th_copy[idx].exetime;
-        CT[0] += time + th_copy[idx].exetime;
+        WT[6] += time - th_copy[idx].arrtime;
+        TAT[6] += time - th_copy[idx].arrtime + th_copy[idx].exetime;
+        CT[6] += time + th_copy[idx].exetime;
 
         time += th_copy[idx].exetime; // 현재 시간 갱신
         th_copy[idx].exetime = 0; // 작업 완료
@@ -349,9 +355,9 @@ int PriorityNonPreemptive(int n) {
     printf("#\n");
 
     // 평균 계산
-    WT[0] /= n;
-    TAT[0] /= n;
-    CT[0] /= n;
+    WT[6] /= n;
+    TAT[6] /= n;
+    CT[6] /= n;
 
     return 0;
 }
@@ -537,8 +543,8 @@ int main() {
 
     // 알고리즘 실행 
     FCFS(threadnum);
-    //SJF(threadnum);
-    //SJFpree(threadnum);
+    SJF(threadnum);
+    SJFpree(threadnum);
     LJF(threadnum);
     LJFpree(threadnum);
     PriorityNonPreemptive(threadnum);
