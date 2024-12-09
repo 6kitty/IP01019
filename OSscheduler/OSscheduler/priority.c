@@ -343,9 +343,9 @@ int PriorityNonPreemptive(int n) {
         printf("%s (%d)\n%d : ", th_copy[idx].tid, th_copy[idx].exetime, time + th_copy[idx].exetime);
 
         // 대기 시간, 반환 시간, 완료 시간 계산
-        WT[6] += time - th_copy[idx].arrtime;
-        TAT[6] += time - th_copy[idx].arrtime + th_copy[idx].exetime;
-        CT[6] += time + th_copy[idx].exetime;
+        WT[5] += time - th_copy[idx].arrtime;
+        TAT[5] += time - th_copy[idx].arrtime + th_copy[idx].exetime;
+        CT[5] += time + th_copy[idx].exetime;
 
         time += th_copy[idx].exetime; // 현재 시간 갱신
         th_copy[idx].exetime = 0; // 작업 완료
@@ -355,9 +355,9 @@ int PriorityNonPreemptive(int n) {
     printf("#\n");
 
     // 평균 계산
-    WT[6] /= n;
-    TAT[6] /= n;
-    CT[6] /= n;
+    WT[5] /= n;
+    TAT[5] /= n;
+    CT[5] /= n;
 
     return 0;
 }
@@ -416,16 +416,27 @@ int PriorityPreemptive(int n) {
         // 스레드 완료 처리
         if (left[idx] == 0) {
             completed++;
+
+            // 대기 시간, 반환 시간, 완료 시간 계산
+            WT[6] += time - th[idx].arrtime - th[idx].exetime;
+            TAT[6] += time - th[idx].arrtime;
+            CT[6] += time;
         }
     }
 
     // 마지막으로 실행된 스레드 처리
-    printf("%d : %s (%d) \n", prev_time, th[prev_idx].tid, time - prev_time);
+    if (prev_idx != -1) {
+        printf("%d : %s (%d) \n", prev_time, th[prev_idx].tid, time - prev_time);
+    }
     printf("%d : #\n", time);
+
+    // 평균 계산
+    WT[6] /= n;
+    TAT[6] /= n;
+    CT[6] /= n;
 
     return 0;
 }
-
 
 
 
