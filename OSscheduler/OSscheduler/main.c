@@ -432,50 +432,44 @@ int PriorityPreemptive(int n) {
     return 0;
 }
 
-// RR
 int RR(int n, int time_slice) {
-    printf("RR \n");
+    printf("RR\n");
     int left[MAX];
-
-    printf("0 : ");
+    int completed = 0;
+    int time = 0;
 
     for (int i = 0; i < n; i++) {
         left[i] = th[i].exetime;
     }
+    printf("0 : ");
 
-    int time = 0;
-    while (1) {
-        int done = 1;
-
+    while (completed < n) {
         for (int i = 0; i < n; i++) {
-            if (left[i] > 0) {
-                done = 0;
+            if (left[i] > 0 && th[i].arrtime <= time) {
+                if (left[i] > time_slice) {
+                    printf("%s(%d)\n", th[i].tid, time_slice);
+                    left[i] -= time_slice; 
+                    time += time_slice;
+                }
+                else {
+                    printf("%s(%d)\n", th[i].tid, left[i]);
+                    time += left[i]; 
+                    left[i] = 0; 
+                    completed++; 
 
-                if (th[i].arrtime <= time) {
-                    if (left[i] > time_slice) {
-                        printf("%s (%d)\n%d : ", th[i].tid, time_slice, time + time_slice);
-                        left[i] -= time_slice;
-                        time += time_slice;
-                    }
-                    else {
-                        printf("%s (%d)\n%d : ", th[i].tid, left[i], time + left[i]);
-                        time += left[i];
-                        left[i] = 0;
-                    }
+                    CT[7] += time; 
+                    TAT[7] += CT[7] - th[i].arrtime; 
+                    WT[7] += TAT[7] - th[i].exetime; 
+                }
+
+                if (completed < n) {
+                    printf("%d : ", time);
                 }
             }
         }
-
-        if (done) break;
-        time++;
     }
 
-    for (int i = 0; i < n; i++) {
-        CT[7] += time;
-        TAT[7] += CT[7] - th[i].arrtime;
-        WT[7] += TAT[7] - th[i].exetime;
-    }
-
+    printf("%d : #\n", time);
     CT[7] /= n;
     TAT[7] /= n;
     WT[7] /= n;
