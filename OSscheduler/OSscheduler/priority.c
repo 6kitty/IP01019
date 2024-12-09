@@ -441,55 +441,51 @@ int PriorityPreemptive(int n) {
 
 
 // RR
-/*int RR(int n, int time_slice) {
-    printf("RR \n");
+int RR(int n, int time_slice) {
+    printf("\nRR\n");
     int left[MAX];
-
-    printf("0 : ");
+    int completed = 0;
+    int time = 0;
 
     for (int i = 0; i < n; i++) {
         left[i] = th[i].exetime;
     }
+    printf("0 : ");
 
-    int time = 0;
-    while (1) {
-        int done = 1;
-
+    while (completed < n) {
         for (int i = 0; i < n; i++) {
-            if (left[i] > 0) {
-                done = 0;
+            if (left[i] > 0 && th[i].arrtime <= time) {
+                if (left[i] > time_slice) {
+                    printf("%s(%d)\n", th[i].tid, time_slice);
+                    left[i] -= time_slice;
+                    time += time_slice;
+                }
+                else {
+                    printf("%s(%d)\n", th[i].tid, left[i]);
+                    time += left[i];
+                    left[i] = 0;
+                    completed++;
 
-                if (th[i].arrtime <= time) {
-                    if (left[i] > time_slice) {
-                        printf("%s (%d)\n%d : ", th[i].tid, time_slice, time + time_slice);
-                        left[i] -= time_slice;
-                        time += time_slice;
-                    }
-                    else {
-                        printf("%s (%d)\n%d : ", th[i].tid, left[i], time + left[i]);
-                        time += left[i];
-                        left[i] = 0;
-                    }
+                    CT[7] += time;
+                    TAT[7] += time - th[i].arrtime;
+                    WT[7] += time - th[i].arrtime - th[i].exetime;
+                }
+
+                if (completed < n) {
+                    printf("%d : ", time);
                 }
             }
         }
-
-        if (done) break;
-        time++;
     }
 
-    for (int i = 0; i < n; i++) {
-        CT[3] += time;
-        TAT[3] += CT[3] - th[i].arrtime;
-        WT[3] += TAT[3] - th[i].exetime;
-    }
-
-    CT[3] /= n;
-    TAT[3] /= n;
-    WT[3] /= n;
+    printf("%d : #\n", time);
+    CT[7] /= n;
+    TAT[7] /= n;
+    WT[7] /= n;
 
     return 0;
-}*/
+}
+
 
 int main() {
     int i = 0;
@@ -560,7 +556,7 @@ int main() {
     LJFpree(threadnum);
     PriorityNonPreemptive(threadnum);
     PriorityPreemptive(threadnum);
-    //RR(threadnum, time_slice);
+    RR(threadnum, time_slice);
 
     // 타임 출력 
     const char* algo[] = {
