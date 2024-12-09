@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     }
 
     char command[256];
-    snprintf(command, sizeof(command), "%s < %s", argv[1], "thread.txt");  // cpuschedule 실행, thread.txt를 입력으로 사용
+    snprintf(command, sizeof(command), "./%s", argv[1]);   // cpuschedule 실행, thread.txt를 입력으로 사용
     char* output_file = "test_result.txt";
     FILE* output = fopen(output_file, "w");
     if (output == NULL) {
