@@ -1,8 +1,21 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <limits.h>
 #include <ctype.h>
+#include <limits.h>
+
+// trim 함수: 문자열의 모든 공백 및 줄바꿈 문자 제거
+void trim(char* str) {
+    char* p = str;
+    int i = 0;
+    while (*p) {
+        if (!isspace((unsigned char)*p)) {
+            str[i++] = *p;
+        }
+        p++;
+    }
+    str[i] = '\0';
+}
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
@@ -11,7 +24,7 @@ int main(int argc, char* argv[]) {
     }
 
     char command[256];
-    snprintf(command, sizeof(command), "./%s", argv[1]);   // cpuschedule 실행, thread.txt를 입력으로 사용
+    snprintf(command, sizeof(command), "./%s", argv[1]);   // cpuschedule 실행
     char* output_file = "test_result.txt";
     FILE* output = fopen(output_file, "w");
     if (output == NULL) {
@@ -74,78 +87,35 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // test_result.txt와 thread_result.txt에서 각각의 결과를 읽어서 비교
-    for (int i = 0; i < 8; i++) {
-        fgets(buffer1, sizeof(buffer1), cmp1);
-        char* token = strtok(buffer1, " \t\n");
-        while (token != NULL && !isdigit(token[0]) && token[0] != '.') {
-            token = strtok(NULL, " \t\n"); // 다음 토큰으로 이동
-        }
-        if (token != NULL) {
-            CT[i] = atof(token);
-        }
-        // Turnaround Time (TAT)
-        token = strtok(NULL, " \t\n");
-        if (token != NULL) {
-            TAT[i] = atof(token);
-        }
-        // Waiting Time (WT)
-        token = strtok(NULL, " \t\n");
-        if (token != NULL) {
-            WT[i] = atof(token);
-        }
-    }
-
-    for (int i = 0; i < 8; i++) {
-        fgets(buffer2, sizeof(buffer2), cmp2);
-        char* token = strtok(buffer2, " \t\n");
-        while (token != NULL && !isdigit(token[0]) && token[0] != '.') {
-            token = strtok(NULL, " \t\n");
-        }
-        if (token != NULL) {
-            compareCT[i] = atof(token);
-        }
-        // Turnaround Time (TAT)
-        token = strtok(NULL, " \t\n");
-        if (token != NULL) {
-            compareTAT[i] = atof(token);
-        }
-        // Waiting Time (WT)
-        token = strtok(NULL, " \t\n");
-        if (token != NULL) {
-            compareWT[i] = atof(token);
-        }
-    }
-
-    fclose(cmp1);
-    fclose(cmp2);
-
-    // 결과 비교 출력
-    cmp1 = fopen(argv[2], "r");
-    cmp2 = fopen(output_file, "r");
     for (int i = 0; i < 8; i++) {
         printf("%s", algo[i]);
         printf(" : ");
 
-        // 시뮬레이션 비교
         int flag = 0;
+
         while (1) {
-            fgets(buffer1, sizeof(buffer1), cmp1);
-            fgets(buffer2, sizeof(buffer2), cmp2);
+            if (fgets(buffer1, sizeof(buffer1), cmp1) == NULL || fgets(buffer2, sizeof(buffer2), cmp2) == NULL) {
+                break;
+            }
+
+            if (strchr(buffer1, '#') != NULL || strchr(buffer2, '#') != NULL) {
+                break;
+            }
+
+            trim(buffer1);
+            trim(buffer2);
+
             if (strcmp(buffer1, buffer2) != 0) {
                 printf("FAIL, ");
                 flag = 1;
                 break;
             }
-            if (strchr(buffer1, '#') != NULL) {
-                break;
-            }
         }
+
         if (flag == 0) {
             printf("PASS, ");
         }
 
-        // Completed Time (CT) 비교
         if (CT[i] == compareCT[i]) {
             printf("PASS, ");
         }
@@ -153,7 +123,6 @@ int main(int argc, char* argv[]) {
             printf("FAIL, ");
         }
 
-        // Turnaround Time (TAT) 비교
         if (TAT[i] == compareTAT[i]) {
             printf("PASS, ");
         }
@@ -161,7 +130,6 @@ int main(int argc, char* argv[]) {
             printf("FAIL, ");
         }
 
-        // Waiting Time (WT) 비교
         if (WT[i] == compareWT[i]) {
             printf("PASS\n");
         }
@@ -169,6 +137,9 @@ int main(int argc, char* argv[]) {
             printf("FAIL\n");
         }
     }
+
+    fclose(cmp1);
+    fclose(cmp2);
 
     return 0;
 }
