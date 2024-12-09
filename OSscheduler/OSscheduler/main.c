@@ -315,7 +315,7 @@ int LJFpree(int n) {
     }
 
     // 마지막으로 처리된 시간 출력
-    printf("#\n", time);
+    printf("#\n");
 
     WT[4] /= n;
     TAT[4] /= n;
