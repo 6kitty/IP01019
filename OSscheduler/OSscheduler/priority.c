@@ -184,10 +184,112 @@ int FCFS(int n) {
     return 0;
 }*/
 
-// LJF (non-preemptive)
+//LJF (non preemptive)
+int LJF(int n) {
+    printf("\nLJF (Non-Preemptive)\n");
+    int nn = 0; // 완료된 스레드 개수
+    int time = 0; // 현재 시간
+    printf("0 : ");
+    // 스레드 데이터를 복사하여 독립적인 실행을 보장
+    Thread th_copy[MAX];
+    memcpy(th_copy, th, sizeof(Thread) * n);
+    while (nn < n) {
+        int idx = -1;
+        int max = -1;
+        for (int i = 0; i < n; i++) {
+            if (th_copy[i].exetime > 0 && th_copy[i].arrtime <= time && th_copy[i].exetime > max) {
+                max = th_copy[i].exetime;
+                idx = i;
+            }
+        }
+        if (idx == -1) {
+            time++;
+            continue;
+        }
+        printf("%s (%d)\n%d : ", th_copy[idx].tid, th_copy[idx].exetime, time + th_copy[idx].exetime);
+        WT[3] += time - th_copy[idx].arrtime;
+        TAT[3] += time - th_copy[idx].arrtime + th_copy[idx].exetime;
+        CT[3] += time + th_copy[idx].exetime;
+        time += th_copy[idx].exetime;
+        th_copy[idx].exetime = 0;  // 실행 후 복사본에서만 값 변경
+        nn += 1;
+    }
+    printf("#\n");
+    WT[3] /= n;
+    TAT[3] /= n;
+    CT[3] /= n;
+    return 0;
+}
 
+int LJFpree(int n) {
+    printf("\nLJF (Preemptive)\n");
+    int left[MAX];
+    printf("0 : ");
+    for (int i = 0; i < n; i++) {
+        left[i] = th[i].exetime;
+    }
+    int time = 0;
 
-// LJF (preemptive)
+    // 스레드 데이터를 복사하여 독립적인 실행을 보장
+    Thread th_copy[MAX];
+    memcpy(th_copy, th, sizeof(Thread) * n);
+
+    while (1) {
+        int idx = -1;
+        int max = -1;
+        for (int j = 0; j < n; j++) {
+            if (left[j] > 0 && th_copy[j].arrtime <= time && left[j] > max) {
+                max = left[j];
+                idx = j;
+            }
+        }
+        if (idx == -1) {
+            int done = 1;
+            for (int j = 0; j < n; j++) {
+                if (left[j] > 0) {
+                    done = 0;
+                    break;
+                }
+            }
+            if (done) break;
+            time++;
+            continue;
+        }
+
+        // 스레드 실행
+        if (th_copy[idx].arrtime > time) {
+            printf("- (%d)\n%d : ", th_copy[idx].arrtime, th_copy[idx].arrtime + time);
+            time = th_copy[idx].arrtime;
+        }
+
+        left[idx]--;
+        if (left[idx] == 0) {
+            // 종료된 스레드에 대해 시간 계산
+            CT[idx] = time + 1;  // 완료 시간
+            TAT[idx] = CT[idx] - th_copy[idx].arrtime;  // Turnaround Time
+            WT[idx] = TAT[idx] - th_copy[idx].exetime;  // Waiting Time
+
+            time += th_copy[idx].exetime;
+            th_copy[idx].exetime = 0;  // 실행 후 복사본에서만 값 변경
+        }
+        time++;
+    }
+
+    // 평균값 계산
+    int total_CT = 0, total_TAT = 0, total_WT = 0;
+    for (int i = 0; i < n; i++) {
+        total_CT += CT[i];
+        total_TAT += TAT[i];
+        total_WT += WT[i];
+    }
+
+    CT[4] = total_CT / n;
+    TAT[4] = total_TAT / n;
+    WT[4] = total_WT / n;
+
+    return 0;
+}
+
 
 
 // Priority (non-preemptive)
@@ -258,86 +360,65 @@ int PriorityNonPreemptive(int n) {
 }
 
 
-// Priority (preemptive)
+int left[MAX];  // 남은 실행 시간
+
+int findpriority(int n, int time) {
+    int idx = -1;
+    for (int i = 0; i < n; i++) {
+        if (th[i].arrtime <= time && left[i] > 0) { // 실행 가능한 스레드만 고려
+            if (idx == -1 || th[idx].priority < th[i].priority) {
+                idx = i;
+            }
+        }
+    }
+    return idx;
+}
+
+// Priority (Preemptive)
 int PriorityPreemptive(int n) {
     printf("\nPriority (Preemptive)\n");
 
-    int left[MAX];  // 남은 실행 시간
     int time = 0;   // 현재 시간
+    int completed = 0; // 완료된 작업 수
+    int prev_idx = -1; // 이전에 실행 중이던 스레드 인덱스
+    int prev_time = 0; // 이전 시간
 
     // 각 스레드의 남은 실행 시간을 초기화
     for (int i = 0; i < n; i++) {
         left[i] = th[i].exetime;
     }
 
-    int idx = -1;  // 현재 실행 중인 스레드의 인덱스
-    int all_done = 0;  // 모든 스레드가 끝났는지 여부 확인
+    while (completed < n) {
+        int idx = findpriority(n, time); // 현재 시간에 실행 가능한 우선순위 높은 스레드
 
-    // while문을 돌면서 모든 스레드가 종료될 때까지 실행
-    while (1) {
-        int max_priority = -1;
-        int new_idx = -1;
-        all_done = 1;  // 모든 스레드가 완료되었는지 확인
-
-        // 1. 현재 실행 가능한 스레드 찾기
-        for (int i = 0; i < n; i++) {
-            if (left[i] > 0 && th[i].arrtime <= time) {  // 실행할 시간이 남은 스레드
-                all_done = 0;  // 아직 실행할 스레드가 있음
-                if (th[i].priority > max_priority) {  // 더 높은 우선순위를 가진 스레드 발견
-                    max_priority = th[i].priority;
-                    new_idx = i;
-                }
-            }
-        }
-
-        if (all_done) break;  // 모든 스레드가 끝났으면 종료
-
-        // 실행할 스레드가 없으면 시간을 증가
-        if (new_idx == -1) {
+        if (idx == -1) { // 실행 가능한 스레드가 없으면 시간 증가
             time++;
             continue;
         }
 
-        // 실행할 스레드가 변경될 때만 출력
-        if (idx != new_idx) {
-            // 이전 스레드가 남아 있다면 실행 종료 출력
-            if (idx != -1 && left[idx] > 0) {
-                printf("%d : %s (%d)\n", time, th[idx].tid, th[idx].exetime - left[idx]);
+        // 스레드 변경 시 시작 시간과 실행시간 기록
+        if (idx != prev_idx) {
+            // 이전 시간과 차이를 계산해서 출력
+            if (prev_idx != -1) {
+                printf("%d : %s (%d) \n", prev_time, th[prev_idx].tid, time - prev_time); // 실행된 시간
             }
-
-            // 새로운 스레드 시작
-            idx = new_idx;
-            printf("%d : %s (%d)\n", time, th[idx].tid, left[idx]);
+            prev_time = time;
+            prev_idx = idx;
         }
 
-        // 각 스레드는 1초만 실행
+        // 1단위 시간 실행
         left[idx]--;
-
-        // 현재 스레드가 완료되었을 경우 처리
-        if (left[idx] == 0) {
-            int completion_time = time + 1;
-            int turnaround_time = completion_time - th[idx].arrtime;
-            int waiting_time = turnaround_time - th[idx].exetime;
-
-            CT[5] += completion_time;
-            TAT[5] += turnaround_time;
-            WT[5] += waiting_time;
-        }
-
-        // 시간 증가
         time++;
 
-        // T3이 4초에 1초만 실행 후 중단되었으면, T3을 다시 실행하도록 처리
-        // 이 구문을 통해 T3이 4초에서 1초만 실행되고 그 후 우선순위가 높은 T2가 실행될 수 있음
+        // 스레드 완료 처리
+        if (left[idx] == 0) {
+            completed++;
+        }
     }
 
-    // 마지막 스레드 완료 후 시간을 출력
+    // 마지막으로 실행된 스레드 처리
+    printf("%d : %s (%d) \n", prev_time, th[prev_idx].tid, time - prev_time);
     printf("%d : #\n", time);
-
-    // 평균 처리 시간 계산
-    CT[5] /= n;
-    TAT[5] /= n;
-    WT[5] /= n;
 
     return 0;
 }
@@ -461,6 +542,8 @@ int main() {
     FCFS(threadnum);
     //SJF(threadnum);
     //SJFpree(threadnum);
+    //LJF(threadnum);
+    LJFpree(threadnum);
     PriorityNonPreemptive(threadnum);
     PriorityPreemptive(threadnum);
     //RR(threadnum, time_slice);
