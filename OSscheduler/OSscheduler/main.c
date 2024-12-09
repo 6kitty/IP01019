@@ -561,7 +561,6 @@ int main() {
                 th[i].priority = atoi(token);
             }
             else {
-                printf("Error: No data\n");
                 continue;
             }
 
