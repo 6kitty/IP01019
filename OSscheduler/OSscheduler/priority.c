@@ -221,74 +221,71 @@ int LJF(int n) {
     return 0;
 }
 
+
+int left[MAX];  // 남은 실행 시간
+
+// LJF 기준으로 가장 긴 실행 시간을 가진 스레드 찾기
+int findLongestJob(int n, int time) {
+    int idx = -1;
+    for (int i = 0; i < n; i++) {
+        if (th[i].arrtime <= time && left[i] > 0) { // 실행 가능한 스레드만 고려
+            if (idx == -1 || left[idx] < left[i]) {  // 남은 실행 시간이 더 긴 스레드 선택
+                idx = i;
+            }
+        }
+    }
+    return idx;
+}
+
+// LJF (Preemptive)
 int LJFpree(int n) {
     printf("\nLJF (Preemptive)\n");
-    int left[MAX];
-    printf("0 : ");
+
+    int time = 0;   // 현재 시간
+    int completed = 0; // 완료된 작업 수
+    int prev_idx = -1; // 이전에 실행 중이던 스레드 인덱스
+    int prev_time = 0; // 이전 시간
+
+    // 각 스레드의 남은 실행 시간을 초기화
     for (int i = 0; i < n; i++) {
         left[i] = th[i].exetime;
     }
-    int time = 0;
 
-    // 스레드 데이터를 복사하여 독립적인 실행을 보장
-    Thread th_copy[MAX];
-    memcpy(th_copy, th, sizeof(Thread) * n);
+    while (completed < n) {
+        int idx = findLongestJob(n, time); // 현재 시간에 실행 가능한 남은 실행 시간이 가장 긴 스레드
 
-    while (1) {
-        int idx = -1;
-        int max = -1;
-        for (int j = 0; j < n; j++) {
-            if (left[j] > 0 && th_copy[j].arrtime <= time && left[j] > max) {
-                max = left[j];
-                idx = j;
-            }
-        }
-        if (idx == -1) {
-            int done = 1;
-            for (int j = 0; j < n; j++) {
-                if (left[j] > 0) {
-                    done = 0;
-                    break;
-                }
-            }
-            if (done) break;
+        if (idx == -1) { // 실행 가능한 스레드가 없으면 시간 증가
             time++;
             continue;
         }
 
-        // 스레드 실행
-        if (th_copy[idx].arrtime > time) {
-            printf("- (%d)\n%d : ", th_copy[idx].arrtime, th_copy[idx].arrtime + time);
-            time = th_copy[idx].arrtime;
+        // 스레드 변경 시 시작 시간과 실행시간 기록
+        if (idx != prev_idx) {
+            // 이전 시간과 차이를 계산해서 출력
+            if (prev_idx != -1) {
+                printf("%d : %s (%d) \n", prev_time, th[prev_idx].tid, time - prev_time); // 실행된 시간
+            }
+            prev_time = time;
+            prev_idx = idx;
         }
 
+        // 1단위 시간 실행
         left[idx]--;
-        if (left[idx] == 0) {
-            // 종료된 스레드에 대해 시간 계산
-            CT[idx] = time + 1;  // 완료 시간
-            TAT[idx] = CT[idx] - th_copy[idx].arrtime;  // Turnaround Time
-            WT[idx] = TAT[idx] - th_copy[idx].exetime;  // Waiting Time
-
-            time += th_copy[idx].exetime;
-            th_copy[idx].exetime = 0;  // 실행 후 복사본에서만 값 변경
-        }
         time++;
+
+        // 스레드 완료 처리
+        if (left[idx] == 0) {
+            completed++;
+        }
     }
 
-    // 평균값 계산
-    int total_CT = 0, total_TAT = 0, total_WT = 0;
-    for (int i = 0; i < n; i++) {
-        total_CT += CT[i];
-        total_TAT += TAT[i];
-        total_WT += WT[i];
-    }
-
-    CT[4] = total_CT / n;
-    TAT[4] = total_TAT / n;
-    WT[4] = total_WT / n;
+    // 마지막으로 실행된 스레드 처리
+    printf("%d : %s (%d) \n", prev_time, th[prev_idx].tid, time - prev_time);
+    printf("%d : #\n", time);
 
     return 0;
 }
+
 
 
 
@@ -542,7 +539,7 @@ int main() {
     FCFS(threadnum);
     //SJF(threadnum);
     //SJFpree(threadnum);
-    //LJF(threadnum);
+    LJF(threadnum);
     LJFpree(threadnum);
     PriorityNonPreemptive(threadnum);
     PriorityPreemptive(threadnum);
